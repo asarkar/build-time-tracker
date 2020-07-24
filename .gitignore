@@ -1,0 +1,24 @@
+# Mac
+.DS_Store
+
+# Logs
+*.log
+
+# Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# IntelliJ
+.idea/
+*.iml
+
+# Maven
+target/
+
+# Gradle
+build/
+.gradle/
+userHome/
+out/
