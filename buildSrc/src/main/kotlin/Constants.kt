@@ -6,5 +6,5 @@ object Dependencies {
 object Versions {
     const val PROJECT = "1.0-SNAPSHOT"
     const val KOTLIN_VERSION = "1.3.72"
-    const val GRADLE_PLUGIN_PUBLISH_VERSION = "0.10.1"
+    const val GRADLE_PLUGIN_PUBLISH_VERSION = "0.12.0"
 }

@@ -5,7 +5,7 @@ Like [passy/build-time-tracker-plugin](https://github.com/passy/build-time-track
 Simply declare the plugin in the `plugins` block, and you are good to go:
 ```
 plugins {
-  id "org.asarkar.build-time-tracker" version "1.0-SNAPSHOT"
+  id "org.asarkar.gradle.build-time-tracker" version "1.0-SNAPSHOT"
 }
 ```
 
