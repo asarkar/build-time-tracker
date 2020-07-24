@@ -3,6 +3,8 @@
 Like [passy/build-time-tracker-plugin](https://github.com/passy/build-time-tracker-plugin), but actively maintained.
 Requires Java 11, because, it's 2020.
 
+[![Build Status](https://github.com/asarkar/build-time-tracker/workflows/CI%20Pipeline/badge.svg)](https://github.com/asarkar/build-time-tracker/actions?query=workflow%3A%22CI+Pipeline%22)
+
 ```
 == Build time summary ==
  :commons:extractIncludeProto | 4.000s | 14% | ████
