@@ -19,7 +19,7 @@ private fun ByteArray.lines(): Sequence<String> {
                 next = iterator.next()
             }
             String(buffer.toByteArray())
-        } else{
+        } else {
             null
         }
     }
@@ -29,8 +29,8 @@ private data class Line(val task: String, val duration: String, val percent: Str
 
 private fun String.toLine(barPosition: BarPosition): Line {
     val tokens = this.split("|")
-        .map{ it.trim() }
-        .takeIf { it.size == 4 } ?: fail("Unexpected line format: $this")
+            .map { it.trim() }
+            .takeIf { it.size == 4 } ?: fail("Unexpected line format: $this")
     return if (barPosition == BarPosition.TRAILING) {
         Line(tokens[0], tokens[1], tokens[2], tokens[3])
     } else {
@@ -40,13 +40,13 @@ private fun String.toLine(barPosition: BarPosition): Line {
 
 class ConsolePrinterTest {
     private val taskDurations = listOf(
-        ":commons:extractIncludeProto" to 4.0,
-        ":commons:compileKotlin" to 2.0,
-        ":commons:compileJava" to 6.0,
-        ":service-client:compileKotlin" to 1.0,
-        ":webapp:compileKotlin" to 1.0,
-        ":webapp:dockerBuildImage" to 4.0,
-        ":webapp:dockerPushImage" to 4.0
+            ":commons:extractIncludeProto" to 4.0,
+            ":commons:compileKotlin" to 2.0,
+            ":commons:compileJava" to 6.0,
+            ":service-client:compileKotlin" to 1.0,
+            ":webapp:compileKotlin" to 1.0,
+            ":webapp:dockerBuildImage" to 4.0,
+            ":webapp:dockerPushImage" to 4.0
     )
 
     @Test
@@ -55,18 +55,18 @@ class ConsolePrinterTest {
         val out = ByteArrayOutputStream()
         val ext = BuildTimeTrackerPluginExtension()
         ConsolePrinter(PrintStream(out)).print(
-            PrinterInput(
-                buildDuration,
-                taskDurations,
-                ext
-            )
+                PrinterInput(
+                        buildDuration,
+                        taskDurations,
+                        ext
+                )
         )
 
         val iterator = out.toByteArray().lines().withIndex().iterator()
         val line = iterator
-            .next()
-            .value
-            .toLine(ext.barPosition)
+                .next()
+                .value
+                .toLine(ext.barPosition)
         assertThat(line.task).isEqualTo(taskDurations[0].first)
         assertThat(line.duration).isEqualTo(String.format("%.3fs", taskDurations[0].second))
         assertThat(line.percent).isEqualTo("${round(taskDurations[0].second / buildDuration * 100).toInt()}%")
@@ -82,21 +82,21 @@ class ConsolePrinterTest {
         val buildDuration = 28.0
         val out = ByteArrayOutputStream()
         val ext = BuildTimeTrackerPluginExtension()
-            .apply { barPosition = BarPosition.LEADING }
+                .apply { barPosition = BarPosition.LEADING }
         ConsolePrinter(PrintStream(out)).print(
-            PrinterInput(
-                buildDuration,
-                taskDurations,
-                ext
-            )
+                PrinterInput(
+                        buildDuration,
+                        taskDurations,
+                        ext
+                )
         )
 
         val iterator = out.toByteArray().lines().withIndex().iterator()
 
         val line = iterator
-            .next()
-            .value
-            .toLine(ext.barPosition)
+                .next()
+                .value
+                .toLine(ext.barPosition)
         assertThat(line.bar.toCharArray().all { it == '█' }).isTrue()
         assertThat(line.duration).isEqualTo(taskDurations[0].first)
         assertThat(line.percent).isEqualTo(String.format("%.3fs", taskDurations[0].second))
@@ -114,15 +114,26 @@ class ConsolePrinterTest {
             maxWidth = 5
         }
         ConsolePrinter(PrintStream(out)).print(
-            PrinterInput(
-                28.0,
-                taskDurations,
-                ext
-            )
+                PrinterInput(
+                        28.0,
+                        taskDurations,
+                        ext
+                )
         )
 
         out.toByteArray().lines()
-            .map { it.toLine(ext.barPosition) }
-            .forEach { assertThat(it.bar.length <= ext.maxWidth) }
+                .map { it.toLine(ext.barPosition) }
+                .forEach { assertThat(it.bar.length <= ext.maxWidth) }
+    }
+
+    @Test
+    fun testConsoleOutput() {
+        ConsolePrinter().print(
+                PrinterInput(
+                        28.0,
+                        taskDurations,
+                        BuildTimeTrackerPluginExtension()
+                )
+        )
     }
 }

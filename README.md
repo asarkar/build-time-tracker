@@ -1,6 +1,18 @@
 # build-time-tracker
 
 Like [passy/build-time-tracker-plugin](https://github.com/passy/build-time-tracker-plugin), but actively maintained.
+Requires Java 11, because, it's 2020.
+
+```
+== Build time summary ==
+ :commons:extractIncludeProto | 4.000s | 14% | ████
+       :commons:compileKotlin | 2.000s |  7% | ██
+         :commons:compileJava | 6.000s | 21% | ██████
+:service-client:compileKotlin | 1.000s |  4% | █
+        :webapp:compileKotlin | 1.000s |  4% | █
+     :webapp:dockerBuildImage | 4.000s | 14% | ████
+      :webapp:dockerPushImage | 4.000s | 14% | ████
+```
 
 Simply declare the plugin in the `plugins` block, and you are good to go:
 ```
