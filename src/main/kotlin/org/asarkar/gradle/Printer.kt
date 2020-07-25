@@ -7,7 +7,7 @@ interface Printer {
 
     companion object {
         fun newInstance(output: Output): Printer {
-            return when(output) {
+            return when (output) {
                 Output.CONSOLE -> ConsolePrinter()
             }
         }

@@ -1,7 +1,7 @@
 # build-time-tracker
 
 Like [passy/build-time-tracker-plugin](https://github.com/passy/build-time-tracker-plugin), but actively maintained.
-Requires Java 11, because, it's 2020.
+Requires Java 11 or later, because, it's 2020.
 
 [![](https://github.com/asarkar/build-time-tracker/workflows/CI%20Pipeline/badge.svg)](https://github.com/asarkar/build-time-tracker/actions?query=workflow%3A%22CI+Pipeline%22)
 
@@ -16,7 +16,7 @@ Requires Java 11, because, it's 2020.
       :webapp:dockerPushImage | 4.000s | 14% | ████
 ```
 
-> Due to a [Gradle limitation](https://stackoverflow.com/a/19166002/839733), the build duration can't be calculated precisely.
+> Due to a [Gradle limitation](https://docs.gradle.org/6.5.1/userguide/upgrading_version_5.html#apis_buildlistener_buildstarted_and_gradle_buildstarted_have_been_deprecated), the build duration can't be calculated precisely.
 Thus, the bars and percentages provide a good indication of how long individual tasks took to complete relative to the build,
 but are not meant to be correct upto the 9th decimal place.
 
@@ -26,11 +26,12 @@ If you are the fiddling type, you can customize the plugin as follows:
 
 ```
 buildTimeTracker {
-  barPosition = TRAILING or LEADING, default is TRAILING
-  sort = false or true, default is false
-  output = CONSOLE, other options may be added in the future
-  maxWidth = 80, so that your build logs don't look like Craigslist
-  minTaskDuration = 1, don't worry about tasks that take less than a second to execute
+    barPosition = TRAILING or LEADING, default is TRAILING
+    sort = false or true, default is false
+    output = CONSOLE, other options may be added in the future
+    maxWidth = 80, so that your build logs don't look like Craigslist
+    minTaskDuration = 1, don't worry about tasks that take less than a second to execute
+    showBars = false or true, default is true
 }
 ```
 

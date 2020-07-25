@@ -1,39 +1,54 @@
 plugins {
     `java-gradle-plugin`
-    kotlin("jvm") version Versions.KOTLIN_VERSION
-    id("com.gradle.plugin-publish") version Versions.GRADLE_PLUGIN_PUBLISH_VERSION
+    kotlin("jvm")
+    id("com.gradle.plugin-publish")
     `maven-publish`
 }
 
+val pluginWebsite: String by project
+val pluginVcsUrl: String by project
+val pluginTags: String by project
+
 pluginBundle {
     // please change these URLs to point to your own website/repository
-    website = "https://github.com/asarkar/build-time-tracker"
-    vcsUrl = "https://github.com/asarkar/build-time-tracker.git"
-    tags = listOf("performance", "buildtimes", "metrics")
+    website = pluginWebsite
+    vcsUrl = pluginVcsUrl
+    tags = pluginTags.split(",").map(String::trim)
 }
+
+val pluginId: String by project
+val pluginDisplayName: String by project
+val pluginDescription: String by project
+val pluginImplementationClass: String by project
+val pluginDeclarationName: String by project
 
 gradlePlugin {
     plugins {
-        create("buildTimeTrackerPlugin") {
-            id = "org.asarkar.gradle.build-time-tracker"
-            displayName = "build-time-tracker"
-            description = "Gradle plugin that prints the time taken by the tasks in a build"
-            implementationClass = "org.asarkar.gradle.BuildTimeTrackerPlugin"
+        create(pluginDeclarationName) {
+            id = pluginId
+            displayName = pluginDisplayName
+            description = pluginDescription
+            implementationClass = pluginImplementationClass
         }
     }
 }
 
-group = "org.asarkar.gradle"
-version = Versions.PROJECT
+val projectGroup: String by project
+val projectVersion: String by project
+group = projectGroup
+version = projectVersion
 
 repositories {
     mavenCentral()
 }
 
+val jUnit5Version: String by project
+val assertJVersion: String by project
 dependencies {
-    testImplementation("org.junit.jupiter:junit-jupiter-api:${Dependencies.JUNIT5_VERSION}")
-    testImplementation("org.assertj:assertj-core:${Dependencies.ASSERTJ_VERSION}")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${Dependencies.JUNIT5_VERSION}")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:$jUnit5Version")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:$jUnit5Version")
+    testImplementation("org.assertj:assertj-core:$assertJVersion")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$jUnit5Version")
 }
 
 tasks.withType<Test> {
@@ -42,7 +57,7 @@ tasks.withType<Test> {
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     kotlinOptions {
-        freeCompilerArgs = listOf("-Xjsr305=strict")
+        freeCompilerArgs = listOf("-Xjsr305=strict", "-Xopt-in=kotlin.time.ExperimentalTime")
         jvmTarget = "11"
     }
 }
