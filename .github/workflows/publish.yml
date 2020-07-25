@@ -16,7 +16,7 @@ jobs:
           echo "::set-output name=status::$output"
         id: check
 
-      - name: Exit if CI failed
+      - name: Abort if CI failed
         if: steps.check.outputs.status != 'success'
         run: |
           echo ${{ steps.check.outputs.status }}

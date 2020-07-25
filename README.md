@@ -28,7 +28,7 @@ If you are the fiddling type, you can customize the plugin as follows:
 ```
 import org.asarkar.gradle.BuildTimeTrackerPluginExtension
 // bunch of code
-configure<BuildTimeTrackerPluginExtension> { // typesafe configuration
+configure<BuildTimeTrackerPluginExtension> { // or buildTimeTracker {...}, for Groovy
     barPosition = TRAILING or LEADING, default is TRAILING
     sort = false or true, default is false
     output = CONSOLE, other options may be added in the future
