@@ -3,18 +3,30 @@ on:
   workflow_dispatch:
 
 jobs:
-  Build:
+  Publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+
+      - name: Inject slug/short variables
+        uses: rlespinasse/github-slug-action@v2.x
+
+      - name: Check CI status
+        run: |
+          output=$(curl -sSL -X GET -G -H "Accept: application/vnd.github.v3+json" -d "branch=${{ env.GITHUB_REF_SLUG }}" -d "event=push" https://api.github.com/repos/${{ github.repository }}/actions/workflows/ci.yml/runs | jq -r '.workflow_runs[0] | "\(.conclusion)"')
+          echo "::set-output name=status::$output"
+        id: check
+
+      - name: Exit if CI failed
+        if: steps.check.outputs.status != 'success'
+        run: |
+          echo ${{ steps.check.outputs.status }}
+          exit 1
 
       - name: Set up JDK
         uses: actions/setup-java@v1
         with:
           java-version: 11
-
-      - name: Build
-        run: ./gradlew build
 
       - name: Publish to Gradle Plugin Portal
         run: ./gradlew publishPlugins -Pgradle.publish.key=${{ secrets.GRADLE_PUBLISH_KEY }} -Pgradle.publish.secret=${{ secrets.GRADLE_PUBLISH_SECRET }}

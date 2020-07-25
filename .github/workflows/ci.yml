@@ -16,5 +16,5 @@ jobs:
         run: ./gradlew build
         continue-on-error: true
 
-      - name: Test Report
+      - name: Test report
         uses: asadmansr/android-test-report-action@v1.2.0
