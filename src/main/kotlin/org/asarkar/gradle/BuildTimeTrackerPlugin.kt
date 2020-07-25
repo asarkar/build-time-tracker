@@ -17,8 +17,7 @@ enum class Output {
 }
 
 open class BuildTimeTrackerPluginExtension {
-    var barPosition: BarPosition =
-            BarPosition.TRAILING
+    var barPosition: BarPosition = BarPosition.TRAILING
     var sort: Boolean = false
     var output: Output = Output.CONSOLE
     var maxWidth: Int = 80

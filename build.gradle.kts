@@ -10,7 +10,6 @@ val pluginVcsUrl: String by project
 val pluginTags: String by project
 
 pluginBundle {
-    // please change these URLs to point to your own website/repository
     website = pluginWebsite
     vcsUrl = pluginVcsUrl
     tags = pluginTags.split(",").map(String::trim)

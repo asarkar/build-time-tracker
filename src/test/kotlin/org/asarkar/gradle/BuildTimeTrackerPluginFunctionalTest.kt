@@ -53,10 +53,6 @@ class BuildTimeTrackerPluginFunctionalTest {
                         println("Hello, World!")
                     }
                 }
-                
-                ${Constants.PLUGIN_EXTENSION_NAME} {
-                    minTaskDuration = 10
-                }
             """.trimIndent())
         }
 
@@ -65,7 +61,6 @@ class BuildTimeTrackerPluginFunctionalTest {
                 .withArguments(taskName, "--warning-mode=all")
                 .withPluginClasspath()
                 .forwardOutput()
-                .withPluginClasspath()
                 .withDebug(true)
                 .build()
 

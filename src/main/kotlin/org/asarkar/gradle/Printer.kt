@@ -1,6 +1,10 @@
 package org.asarkar.gradle
 
-data class PrinterInput(val buildDuration: Double, val taskDurations: List<Pair<String, Double>>, val ext: BuildTimeTrackerPluginExtension)
+data class PrinterInput(
+        val buildDuration: Double,
+        val taskDurations: List<Pair<String, Double>>,
+        val ext: BuildTimeTrackerPluginExtension
+)
 
 interface Printer {
     fun print(input: PrinterInput)
