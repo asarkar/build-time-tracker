@@ -24,7 +24,7 @@ class TimingRecorder(val ext: BuildTimeTrackerPluginExtension) : TaskExecutionLi
 
     override fun afterExecute(task: Task, state: TaskState) {
         val duration = taskStarted.elapsedNow().inSeconds
-        if (duration >= ext.minTaskDuration) {
+        if (duration >= ext.minTaskDuration.seconds) {
             taskDurations.add(task.path to duration)
         }
     }
@@ -36,7 +36,7 @@ class TimingRecorder(val ext: BuildTimeTrackerPluginExtension) : TaskExecutionLi
             )
             (extra[Constants.LOGGER_KEY] as Logger).lifecycle(
                     "All tasks completed within the minimum threshold: {}s, no build summary to show",
-                    ext.minTaskDuration
+                    ext.minTaskDuration.toSeconds()
             )
             return
         }

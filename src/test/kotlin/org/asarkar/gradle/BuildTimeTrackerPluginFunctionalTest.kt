@@ -34,6 +34,9 @@ class BuildTimeTrackerPluginFunctionalTest {
             buildFile = Files.createFile(testProjectDir.resolve("build.gradle.kts"))
             Files.newBufferedWriter(buildFile, CREATE, WRITE, TRUNCATE_EXISTING).use {
                 it.write("""
+                    import java.lang.Thread.sleep
+                    import org.asarkar.gradle.BuildTimeTrackerPluginExtension
+                    import java.time.Duration
                     plugins {
                         id("${props.getProperty("pluginId")}")
                     }
@@ -50,20 +53,29 @@ class BuildTimeTrackerPluginFunctionalTest {
             it.write("""
                 tasks.register("$taskName") {
                     doLast {
+                        sleep(2000)
                         println("Hello, World!")
                     }
+                }
+                
+                configure<BuildTimeTrackerPluginExtension> {
+                    minTaskDuration = Duration.ofSeconds(1)
                 }
             """.trimIndent())
         }
 
+        println(Files.readString(buildFile))
+
         val result = GradleRunner.create()
                 .withProjectDir(buildFile.parent.toFile())
-                .withArguments(taskName, "--warning-mode=all")
+                .withArguments(taskName, "--warning-mode=all", "--stacktrace")
                 .withPluginClasspath()
                 .forwardOutput()
                 .withDebug(true)
                 .build()
 
         assertThat(result.task(taskName)?.outcome == SUCCESS)
+        assertThat(result.output).contains("== Build time summary ==")
+        assertThat(result.output).contains(":hello")
     }
 }

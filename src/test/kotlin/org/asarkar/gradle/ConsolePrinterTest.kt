@@ -6,9 +6,14 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.Arguments.arguments
 import org.junit.jupiter.params.provider.EnumSource
+import org.junit.jupiter.params.provider.MethodSource
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
+import java.util.stream.Stream
+
 
 private fun ByteArray.lines(): Sequence<String> {
     val iterator = this.iterator()
@@ -80,7 +85,7 @@ class ConsolePrinterTest {
                 .value
                 .toLine(ext.barPosition)
         assertThat(line.task).isEqualTo(taskDurations[0].first)
-        assertThat(line.duration).isEqualTo("4.000s")
+        assertThat(line.duration).isEqualTo("4S")
         assertThat(line.percent).isEqualTo("14%")
         assertThat(line.bar.toCharArray().all { it == '█' }).isTrue()
 
@@ -108,7 +113,7 @@ class ConsolePrinterTest {
                 .value
                 .toLine(ext.barPosition)
         assertThat(line.bar.toCharArray().all { it == '█' }).isTrue()
-        assertThat(line.duration).isEqualTo("4.000s")
+        assertThat(line.duration).isEqualTo("4S")
         assertThat(line.percent).isEqualTo("14%")
         assertThat(line.task).isEqualTo(taskDurations[0].first)
 
@@ -231,4 +236,26 @@ class ConsolePrinterTest {
     }
 
 
+    @ParameterizedTest
+    @MethodSource("durationProvider")
+    fun testDurationFormatting(duration: Double, formatted: String) {
+        assertThat(ConsolePrinter.formatDuration(duration)).isEqualTo(formatted)
+    }
+
+    companion object {
+        @JvmStatic
+        fun durationProvider(): Stream<Arguments> {
+            return Stream.of(
+                    arguments(14, "14S"),
+                    arguments(14.23, "14.230S"),
+                    arguments(7200, "2H"),
+                    arguments(120, "2M"),
+                    arguments(3905.3, "1H5M5.300S"),
+                    arguments(3900, "1H5M"),
+                    arguments(61, "1M1S"),
+                    arguments(172800, "48H"), // should be 2D
+                    arguments(172859, "48H0M59S")
+            )
+        }
+    }
 }
