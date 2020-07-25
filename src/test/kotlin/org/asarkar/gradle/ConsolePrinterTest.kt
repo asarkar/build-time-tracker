@@ -1,11 +1,14 @@
 package org.asarkar.gradle
 
+import org.asarkar.gradle.ConsolePrinter.Companion.BLOCK_STR
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
-import kotlin.math.round
 
 private fun ByteArray.lines(): Sequence<String> {
     val iterator = this.iterator()
@@ -34,11 +37,20 @@ private fun String.toLine(barPosition: BarPosition): Line {
     return if (barPosition == BarPosition.TRAILING) {
         Line(tokens[0], tokens[1], tokens[2], tokens[3])
     } else {
-        Line(tokens[3], tokens[1], tokens[2], tokens[0])
+        Line(tokens[1], tokens[2], tokens[3], tokens[0])
     }
 }
 
 class ConsolePrinterTest {
+    private lateinit var out: ByteArrayOutputStream
+    private lateinit var ext: BuildTimeTrackerPluginExtension
+
+    @BeforeEach
+    fun beforeEach() {
+        out = ByteArrayOutputStream()
+        ext = BuildTimeTrackerPluginExtension()
+    }
+
     private val taskDurations = listOf(
             ":commons:extractIncludeProto" to 4.0,
             ":commons:compileKotlin" to 2.0,
@@ -52,8 +64,7 @@ class ConsolePrinterTest {
     @Test
     fun testConsolePrinterDefault() {
         val buildDuration = 28.0
-        val out = ByteArrayOutputStream()
-        val ext = BuildTimeTrackerPluginExtension()
+
         ConsolePrinter(PrintStream(out)).print(
                 PrinterInput(
                         buildDuration,
@@ -63,77 +74,161 @@ class ConsolePrinterTest {
         )
 
         val iterator = out.toByteArray().lines().withIndex().iterator()
+        iterator.next() // ignore summary header
         val line = iterator
                 .next()
                 .value
                 .toLine(ext.barPosition)
         assertThat(line.task).isEqualTo(taskDurations[0].first)
-        assertThat(line.duration).isEqualTo(String.format("%.3fs", taskDurations[0].second))
-        assertThat(line.percent).isEqualTo("${round(taskDurations[0].second / buildDuration * 100).toInt()}%")
+        assertThat(line.duration).isEqualTo("4.000s")
+        assertThat(line.percent).isEqualTo("14%")
         assertThat(line.bar.toCharArray().all { it == '█' }).isTrue()
 
         iterator.forEach {
-            assertThat(it.value.startsWith(taskDurations[it.index].first) && it.value.endsWith("\u2588"))
+            assertThat(it.value.startsWith(taskDurations[it.index - 1].first) && it.value.endsWith(BLOCK_STR))
         }
     }
 
     @Test
     fun testConsolePrinterLeading() {
         val buildDuration = 28.0
-        val out = ByteArrayOutputStream()
-        val ext = BuildTimeTrackerPluginExtension()
-                .apply { barPosition = BarPosition.LEADING }
         ConsolePrinter(PrintStream(out)).print(
                 PrinterInput(
                         buildDuration,
                         taskDurations,
-                        ext
+                        ext.apply { barPosition = BarPosition.LEADING }
                 )
         )
 
         val iterator = out.toByteArray().lines().withIndex().iterator()
+        iterator.next() // ignore summary header
 
         val line = iterator
                 .next()
                 .value
                 .toLine(ext.barPosition)
         assertThat(line.bar.toCharArray().all { it == '█' }).isTrue()
-        assertThat(line.duration).isEqualTo(taskDurations[0].first)
-        assertThat(line.percent).isEqualTo(String.format("%.3fs", taskDurations[0].second))
-        assertThat(line.task).isEqualTo("${round(taskDurations[0].second / buildDuration * 100).toInt()}%")
+        assertThat(line.duration).isEqualTo("4.000s")
+        assertThat(line.percent).isEqualTo("14%")
+        assertThat(line.task).isEqualTo(taskDurations[0].first)
 
         iterator.forEach {
-            assertThat(it.value.endsWith(taskDurations[it.index].first) && it.value.startsWith("\u2588"))
+            assertThat(it.value.endsWith(taskDurations[it.index - 1].first) && it.value.startsWith(BLOCK_STR))
         }
     }
 
     @Test
     fun testConsolePrinterScaled() {
-        val out = ByteArrayOutputStream()
-        val ext = BuildTimeTrackerPluginExtension().apply {
-            maxWidth = 5
-        }
         ConsolePrinter(PrintStream(out)).print(
+                PrinterInput(
+                        28.0,
+                        taskDurations,
+                        ext.apply { maxWidth = 5 }
+                )
+        )
+
+        out.toByteArray().lines()
+                .drop(1) // ignore summary header
+                .map { it.toLine(ext.barPosition) }
+                .forEach { assertThat(it.bar.length <= ext.maxWidth) }
+    }
+
+    @Test
+    // https://github.com/asarkar/build-time-tracker/issues/1
+    fun testConsolePrinterHideBars() {
+        ConsolePrinter(PrintStream(out)).print(
+                PrinterInput(
+                        28.0,
+                        taskDurations,
+                        ext.apply { showBars = false }
+                )
+        )
+
+        assertThat(out.toByteArray().lines()
+                .all { !it.contains(BLOCK_STR) }
+        )
+    }
+
+    @ParameterizedTest
+    @EnumSource(BarPosition::class)
+    // https://github.com/asarkar/build-time-tracker/issues/3
+    fun testFormatting(position: BarPosition) {
+        ConsolePrinter(PrintStream(out)).print(
+                PrinterInput(
+                        18.0,
+                        listOf(
+                                ":service-client:compileKotlin" to 1.432,
+                                "webapp:test" to 13.882
+                        ),
+                        ext.apply { barPosition = position }
+                )
+        )
+
+        val lines = out.toByteArray().lines().toList()
+        assertThat(lines).hasSize(3)
+        val first = lines[1].mapIndexed { i, ch -> if (ch == '|') i else -1 }
+                .filterNot { it == -1 }
+        val second = lines[2].mapIndexed { i, ch -> if (ch == '|') i else -1 }
+                .filterNot { it == -1 }
+        assertThat(first).containsExactlyElementsOf(second)
+    }
+
+    @Test
+    fun testFormattingHideBars() {
+        ConsolePrinter(PrintStream(out)).print(
+                PrinterInput(
+                        18.0,
+                        listOf(
+                                ":service-client:compileKotlin" to 1.432,
+                                "webapp:test" to 13.882
+                        ),
+                        ext.apply { showBars = false }
+                )
+        )
+
+        val lines = out.toByteArray().lines().toList()
+        assertThat(lines).hasSize(3)
+        val first = lines[1].mapIndexed { i, ch -> if (ch == '|') i else -1 }
+                .filterNot { it == -1 }
+        val second = lines[2].mapIndexed { i, ch -> if (ch == '|') i else -1 }
+                .filterNot { it == -1 }
+        assertThat(first).containsExactlyElementsOf(second)
+    }
+
+    // The following "tests" do not verify anything, but prints the output for manual inspection
+
+    @Test
+    fun testConsoleOutputDefault() {
+        ConsolePrinter().print(
                 PrinterInput(
                         28.0,
                         taskDurations,
                         ext
                 )
         )
-
-        out.toByteArray().lines()
-                .map { it.toLine(ext.barPosition) }
-                .forEach { assertThat(it.bar.length <= ext.maxWidth) }
     }
 
     @Test
-    fun testConsoleOutput() {
+    fun testConsoleOutputLeading() {
         ConsolePrinter().print(
                 PrinterInput(
                         28.0,
                         taskDurations,
-                        BuildTimeTrackerPluginExtension()
+                        ext.apply { barPosition = BarPosition.LEADING }
                 )
         )
     }
+
+    @Test
+    fun testConsoleOutputHideBars() {
+        ConsolePrinter().print(
+                PrinterInput(
+                        28.0,
+                        taskDurations,
+                        ext.apply { showBars = false }
+                )
+        )
+    }
+
+
 }
