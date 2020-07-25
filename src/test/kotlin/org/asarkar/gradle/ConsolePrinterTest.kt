@@ -1,6 +1,7 @@
 package org.asarkar.gradle
 
 import org.asarkar.gradle.ConsolePrinter.Companion.BLOCK_STR
+import org.asarkar.gradle.ConsolePrinter.Companion.format
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -239,7 +240,7 @@ class ConsolePrinterTest {
     @ParameterizedTest
     @MethodSource("durationProvider")
     fun testDurationFormatting(duration: Double, formatted: String) {
-        assertThat(ConsolePrinter.formatDuration(duration)).isEqualTo(formatted)
+        assertThat(duration.format()).isEqualTo(formatted)
     }
 
     companion object {
@@ -257,5 +258,22 @@ class ConsolePrinterTest {
                     arguments(172859, "48H0M59S")
             )
         }
+    }
+
+    @Test
+    fun testFormatHundredPercent() {
+        ConsolePrinter(PrintStream(out)).print(
+                PrinterInput(
+                        10.0,
+                        listOf(
+                                ":service-client:compileKotlin" to 10.0
+                        ),
+                        ext
+                )
+        )
+
+        val lines = out.toByteArray().lines().toList()
+        assertThat(lines).hasSize(2)
+        assertThat(lines.last().toLine(ext.barPosition).percent).isEqualTo("100%")
     }
 }
