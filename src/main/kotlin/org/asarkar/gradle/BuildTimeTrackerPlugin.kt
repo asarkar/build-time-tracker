@@ -7,6 +7,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.ExtensionAware
 import org.gradle.api.reflect.TypeOf
+import java.time.Duration
 
 enum class BarPosition {
     LEADING, TRAILING
@@ -21,7 +22,7 @@ open class BuildTimeTrackerPluginExtension {
     var sort: Boolean = false
     var output: Output = Output.CONSOLE
     var maxWidth: Int = 80
-    var minTaskDuration: Int = 1
+    var minTaskDuration: Duration = Duration.ofSeconds(1)
     var showBars: Boolean = true
 }
 
