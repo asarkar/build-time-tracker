@@ -58,18 +58,18 @@ class ConsolePrinterTest {
     }
 
     private val taskDurations = listOf(
-            ":commons:extractIncludeProto" to 4.0,
-            ":commons:compileKotlin" to 2.0,
-            ":commons:compileJava" to 6.0,
-            ":service-client:compileKotlin" to 1.0,
-            ":webapp:compileKotlin" to 1.0,
-            ":webapp:dockerBuildImage" to 4.0,
-            ":webapp:dockerPushImage" to 4.0
+            ":commons:extractIncludeProto" to 4L,
+            ":commons:compileKotlin" to 2L,
+            ":commons:compileJava" to 6L,
+            ":service-client:compileKotlin" to 1L,
+            ":webapp:compileKotlin" to 1L,
+            ":webapp:dockerBuildImage" to 4L,
+            ":webapp:dockerPushImage" to 4L
     )
 
     @Test
     fun testConsolePrinterDefault() {
-        val buildDuration = 28.0
+        val buildDuration = 28L
 
         ConsolePrinter(PrintStream(out)).print(
                 PrinterInput(
@@ -97,7 +97,7 @@ class ConsolePrinterTest {
 
     @Test
     fun testConsolePrinterLeading() {
-        val buildDuration = 28.0
+        val buildDuration = 28L
         ConsolePrinter(PrintStream(out)).print(
                 PrinterInput(
                         buildDuration,
@@ -127,7 +127,7 @@ class ConsolePrinterTest {
     fun testConsolePrinterScaled() {
         ConsolePrinter(PrintStream(out)).print(
                 PrinterInput(
-                        28.0,
+                        28L,
                         taskDurations,
                         ext.apply { maxWidth = 5 }
                 )
@@ -144,7 +144,7 @@ class ConsolePrinterTest {
     fun testConsolePrinterHideBars() {
         ConsolePrinter(PrintStream(out)).print(
                 PrinterInput(
-                        28.0,
+                        28L,
                         taskDurations,
                         ext.apply { showBars = false }
                 )
@@ -161,10 +161,10 @@ class ConsolePrinterTest {
     fun testFormatting(position: BarPosition) {
         ConsolePrinter(PrintStream(out)).print(
                 PrinterInput(
-                        18.0,
+                        18L,
                         listOf(
-                                ":service-client:compileKotlin" to 1.432,
-                                "webapp:test" to 13.882
+                                ":service-client:compileKotlin" to 1L,
+                                "webapp:test" to 13L
                         ),
                         ext.apply { barPosition = position }
                 )
@@ -183,10 +183,10 @@ class ConsolePrinterTest {
     fun testFormattingHideBars() {
         ConsolePrinter(PrintStream(out)).print(
                 PrinterInput(
-                        18.0,
+                        18L,
                         listOf(
-                                ":service-client:compileKotlin" to 1.432,
-                                "webapp:test" to 13.882
+                                ":service-client:compileKotlin" to 1L,
+                                "webapp:test" to 13L
                         ),
                         ext.apply { showBars = false }
                 )
@@ -207,7 +207,7 @@ class ConsolePrinterTest {
     fun testConsoleOutputDefault() {
         ConsolePrinter().print(
                 PrinterInput(
-                        28.0,
+                        28L,
                         taskDurations,
                         ext
                 )
@@ -218,7 +218,7 @@ class ConsolePrinterTest {
     fun testConsoleOutputLeading() {
         ConsolePrinter().print(
                 PrinterInput(
-                        28.0,
+                        28L,
                         taskDurations,
                         ext.apply { barPosition = BarPosition.LEADING }
                 )
@@ -229,7 +229,7 @@ class ConsolePrinterTest {
     fun testConsoleOutputHideBars() {
         ConsolePrinter().print(
                 PrinterInput(
-                        28.0,
+                        28L,
                         taskDurations,
                         ext.apply { showBars = false }
                 )
@@ -239,7 +239,7 @@ class ConsolePrinterTest {
 
     @ParameterizedTest
     @MethodSource("durationProvider")
-    fun testDurationFormatting(duration: Double, formatted: String) {
+    fun testDurationFormatting(duration: Long, formatted: String) {
         assertThat(duration.format()).isEqualTo(formatted)
     }
 
@@ -248,13 +248,12 @@ class ConsolePrinterTest {
         fun durationProvider(): Stream<Arguments> {
             return Stream.of(
                     arguments(14, "14S"),
-                    arguments(14.23, "14.230S"),
                     arguments(7200, "2H"),
                     arguments(120, "2M"),
-                    arguments(3905.3, "1H5M5.300S"),
+                    arguments(3905, "1H5M5S"),
                     arguments(3900, "1H5M"),
                     arguments(61, "1M1S"),
-                    arguments(172800, "48H"), // should be 2D
+                    arguments(172800, "48H"),
                     arguments(172859, "48H0M59S")
             )
         }
@@ -264,9 +263,9 @@ class ConsolePrinterTest {
     fun testFormatHundredPercent() {
         ConsolePrinter(PrintStream(out)).print(
                 PrinterInput(
-                        10.0,
+                        10L,
                         listOf(
-                                ":service-client:compileKotlin" to 10.0
+                                ":service-client:compileKotlin" to 10L
                         ),
                         ext
                 )
