@@ -64,7 +64,7 @@ class BuildTimeTrackerPluginFunctionalTest {
             """.trimIndent())
         }
 
-        println(Files.readString(buildFile))
+        println(buildFile.toFile().readText())
 
         val result = GradleRunner.create()
                 .withProjectDir(buildFile.parent.toFile())
