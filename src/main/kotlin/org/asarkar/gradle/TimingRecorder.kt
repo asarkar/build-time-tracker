@@ -10,20 +10,20 @@ import org.gradle.api.logging.Logger
 import org.gradle.api.plugins.ExtensionAware
 import org.gradle.api.reflect.TypeOf
 import org.gradle.api.tasks.TaskState
-import kotlin.time.TimeMark
-import kotlin.time.TimeSource
+import java.time.Duration
+import java.time.Instant
 
 class TimingRecorder(val ext: BuildTimeTrackerPluginExtension) : TaskExecutionListener, BuildListener {
-    private lateinit var taskStarted: TimeMark
-    private lateinit var buildStarted: TimeMark
-    private val taskDurations = mutableListOf<Pair<String, Double>>()
+    private lateinit var taskStarted: Instant
+    private lateinit var buildStarted: Instant
+    private val taskDurations = mutableListOf<Pair<String, Long>>()
 
     override fun beforeExecute(task: Task) {
-        taskStarted = TimeSource.Monotonic.markNow()
+        taskStarted = Instant.now()
     }
 
     override fun afterExecute(task: Task, state: TaskState) {
-        val duration = taskStarted.elapsedNow().inSeconds
+        val duration = Duration.between(taskStarted, Instant.now()).toSeconds()
         if (duration >= ext.minTaskDuration.seconds) {
             taskDurations.add(task.path to duration)
         }
@@ -40,7 +40,7 @@ class TimingRecorder(val ext: BuildTimeTrackerPluginExtension) : TaskExecutionLi
             )
             return
         }
-        val buildDuration = buildStarted.elapsedNow().inSeconds
+        val buildDuration = Duration.between(buildStarted, Instant.now()).toSeconds()
         if (ext.sort) {
             taskDurations.sortBy { -it.second }
         }
@@ -59,6 +59,6 @@ class TimingRecorder(val ext: BuildTimeTrackerPluginExtension) : TaskExecutionLi
     }
 
     override fun projectsEvaluated(gradle: Gradle) {
-        buildStarted = TimeSource.Monotonic.markNow()
+        buildStarted = Instant.now()
     }
 }
