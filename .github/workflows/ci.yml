@@ -13,7 +13,7 @@ jobs:
           java-version: 8
 
       - name: Build
-        run: ./gradlew build
+        run: ./gradlew clean build
         continue-on-error: true
 
       - name: Test report
