@@ -254,7 +254,7 @@ class ConsolePrinterTest {
                     arguments(3900, "1H5M"),
                     arguments(61, "1M1S"),
                     arguments(172800, "48H"),
-                    arguments(172859, "48H0M59S")
+                    arguments(172859, "48H59S")
             )
         }
     }

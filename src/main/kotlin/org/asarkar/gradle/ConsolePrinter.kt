@@ -1,13 +1,10 @@
 package org.asarkar.gradle
 
 import java.io.PrintStream
+import java.time.Duration
 import kotlin.math.round
-import kotlin.time.DurationUnit
-import kotlin.time.ExperimentalTime
-import kotlin.time.toDuration
 
 class ConsolePrinter(private val out: PrintStream = System.out) : Printer {
-    @ExperimentalTime
     override fun print(input: PrinterInput) {
         // find the maxes needed for formatting
         val (maxLabelLen, maxDuration, maxFormattedDurationLen) = input.taskDurations.fold(
@@ -47,10 +44,9 @@ class ConsolePrinter(private val out: PrintStream = System.out) : Printer {
         const val BLOCK_STR = "\u2588"
 
         private fun Long.percentOf(buildDuration: Long): Int = round(this / buildDuration.toDouble() * 100).toInt()
-        @ExperimentalTime
         internal fun Long.format(): String {
             val separators = setOf('P', 'D', 'T')
-            return this.toDuration(DurationUnit.SECONDS).toIsoString()
+            return Duration.ofSeconds(this).toString()
                     .filterNot { it in separators }
         }
         private fun Int.format(): String = String.format("%d%%", this)
