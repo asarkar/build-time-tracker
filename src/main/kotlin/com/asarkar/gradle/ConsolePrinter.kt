@@ -1,4 +1,4 @@
-package org.asarkar.gradle
+package com.asarkar.gradle
 
 import java.io.PrintStream
 import java.time.Duration

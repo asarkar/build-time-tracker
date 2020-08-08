@@ -1,4 +1,4 @@
-package org.asarkar.gradle
+package com.asarkar.gradle
 
 data class PrinterInput(
         val buildDuration: Long,

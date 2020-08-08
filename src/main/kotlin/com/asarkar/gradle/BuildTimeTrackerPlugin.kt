@@ -1,8 +1,8 @@
-package org.asarkar.gradle
+package com.asarkar.gradle
 
-import org.asarkar.gradle.Constants.EXTRA_EXTENSION_NAME
-import org.asarkar.gradle.Constants.LOGGER_KEY
-import org.asarkar.gradle.Constants.PLUGIN_EXTENSION_NAME
+import com.asarkar.gradle.Constants.EXTRA_EXTENSION_NAME
+import com.asarkar.gradle.Constants.LOGGER_KEY
+import com.asarkar.gradle.Constants.PLUGIN_EXTENSION_NAME
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.ExtensionAware

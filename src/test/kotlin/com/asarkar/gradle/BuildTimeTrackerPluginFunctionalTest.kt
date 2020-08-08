@@ -1,4 +1,4 @@
-package org.asarkar.gradle
+package com.asarkar.gradle
 
 import org.assertj.core.api.Assertions.assertThat
 import org.gradle.testkit.runner.GradleRunner
@@ -35,7 +35,7 @@ class BuildTimeTrackerPluginFunctionalTest {
             Files.newBufferedWriter(buildFile, CREATE, WRITE, TRUNCATE_EXISTING).use {
                 it.write("""
                     import java.lang.Thread.sleep
-                    import org.asarkar.gradle.BuildTimeTrackerPluginExtension
+                    import com.asarkar.gradle.BuildTimeTrackerPluginExtension
                     import java.time.Duration
                     plugins {
                         id("${props.getProperty("pluginId")}")

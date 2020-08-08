@@ -1,4 +1,4 @@
-package org.asarkar.gradle
+package com.asarkar.gradle
 
 import org.gradle.BuildAdapter
 import org.gradle.BuildResult

@@ -24,12 +24,12 @@ tasks took to complete relative to the build, but are not meant to be correct up
 > If the output console does not support UTF-8 encoding, the bars may appear as weird characters. If you are running
 Windows, make sure the terminal encoding is set to UTF-8, or turn off the bars as explained below.
 
-See [Gradle Plugin Portal](https://plugins.gradle.org/plugin/org.asarkar.gradle.build-time-tracker) for usage instructions.
+See [Gradle Plugin Portal](https://plugins.gradle.org/plugin/com.asarkar.gradle.build-time-tracker) for usage instructions.
 
 If you are the fiddling type, you can customize the plugin as follows:
 
 ```
-import org.asarkar.gradle.BuildTimeTrackerPluginExtension
+import com.asarkar.gradle.BuildTimeTrackerPluginExtension
 // bunch of code
 configure<BuildTimeTrackerPluginExtension> { // or buildTimeTracker {...}, for Groovy
     barPosition = TRAILING or LEADING, default is TRAILING

@@ -1,7 +1,7 @@
-package org.asarkar.gradle
+package com.asarkar.gradle
 
-import org.asarkar.gradle.ConsolePrinter.Companion.BLOCK_STR
-import org.asarkar.gradle.ConsolePrinter.Companion.format
+import com.asarkar.gradle.ConsolePrinter.Companion.BLOCK_STR
+import com.asarkar.gradle.ConsolePrinter.Companion.format
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
