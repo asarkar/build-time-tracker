@@ -1,12 +1,14 @@
-package com.asarkar.gradle
+package com.asarkar.gradle.buildtimetracker
 
-import com.asarkar.gradle.Constants.EXTRA_EXTENSION_NAME
-import com.asarkar.gradle.Constants.LOGGER_KEY
-import com.asarkar.gradle.Constants.PLUGIN_EXTENSION_NAME
+import com.asarkar.gradle.buildtimetracker.Constants.EXTRA_EXTENSION_NAME
+import com.asarkar.gradle.buildtimetracker.Constants.LOGGER_KEY
+import com.asarkar.gradle.buildtimetracker.Constants.PLUGIN_EXTENSION_NAME
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.ExtensionAware
 import org.gradle.api.reflect.TypeOf
+import java.nio.file.Path
+import java.nio.file.Paths
 import java.time.Duration
 
 enum class BarPosition {
@@ -14,7 +16,7 @@ enum class BarPosition {
 }
 
 enum class Output {
-    CONSOLE
+    CONSOLE, CSV
 }
 
 open class BuildTimeTrackerPluginExtension {
@@ -24,6 +26,10 @@ open class BuildTimeTrackerPluginExtension {
     var maxWidth: Int = 80
     var minTaskDuration: Duration = Duration.ofSeconds(1)
     var showBars: Boolean = true
+    var csvFilePath: Path = Paths.get("build")
+        .resolve("reports")
+        .resolve(PLUGIN_EXTENSION_NAME)
+        .resolve("build.csv")
 }
 
 class BuildTimeTrackerPlugin : Plugin<Project> {

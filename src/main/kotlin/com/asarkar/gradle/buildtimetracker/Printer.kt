@@ -1,11 +1,23 @@
-package com.asarkar.gradle
+package com.asarkar.gradle.buildtimetracker
 
+import java.io.Closeable
 import java.io.PrintStream
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.nio.file.StandardOpenOption.CREATE
+import java.nio.file.StandardOpenOption.TRUNCATE_EXISTING
+import java.nio.file.StandardOpenOption.WRITE
 import java.time.Duration
 import kotlin.math.round
 
-class ConsolePrinter(private val out: PrintStream = System.out) : Printer {
-    override fun print(input: PrinterInput) {
+data class PrinterInput(
+    val buildDuration: Long,
+    val taskDurations: List<Pair<String, Long>>,
+    val ext: BuildTimeTrackerPluginExtension
+)
+
+interface Printer : Closeable {
+    fun print(input: PrinterInput) {
         // find the maxes needed for formatting
         val (maxLabelLen, maxDuration, maxFormattedDurationLen) = input.taskDurations.fold(
             Triple(-1, -1L, -1)
@@ -21,28 +33,30 @@ class ConsolePrinter(private val out: PrintStream = System.out) : Printer {
             .format()
             .length
 
-        out.println("== Build time summary ==")
         input.taskDurations.forEach {
             val numBlocks = round(it.second * scalingFraction).toInt()
             val percent = it.second.percentOf(input.buildDuration)
 
             val common = String.format(
-                "%${maxLabelLen}s | %${maxFormattedDurationLen}s | %${maxFormattedPercentLen}s",
-                it.first, it.second.format(), percent.format()
+                "%${maxLabelLen}s%s%${maxFormattedDurationLen}s%s%${maxFormattedPercentLen}s",
+                it.first, delimiter, it.second.format(), delimiter, percent.format()
             )
 
             if (!input.ext.showBars) {
                 out.println(common)
             } else if (input.ext.barPosition == BarPosition.TRAILING) {
-                out.printf("%s | %s\n", common, BLOCK_STR.repeat(numBlocks))
+                out.printf("%s%s%s\n", common, delimiter, "$BLOCK_CHAR".repeat(numBlocks))
             } else {
-                out.printf("%${maxNumBlocks}s | %s\n", BLOCK_STR.repeat(numBlocks), common)
+                out.printf("%${maxNumBlocks}s%s%s\n", "$BLOCK_CHAR".repeat(numBlocks), delimiter, common)
             }
         }
     }
 
+    val out: PrintStream
+    val delimiter: String
+
     companion object {
-        const val BLOCK_STR = "\u2588"
+        const val BLOCK_CHAR = '\u2588'
 
         private fun Long.percentOf(buildDuration: Long): Int = round(this / buildDuration.toDouble() * 100).toInt()
         internal fun Long.format(): String {
@@ -50,6 +64,23 @@ class ConsolePrinter(private val out: PrintStream = System.out) : Printer {
             return Duration.ofSeconds(this).toString()
                 .filterNot { it in separators }
         }
+
         private fun Int.format(): String = String.format("%d%%", this)
+
+        fun newInstance(ext: BuildTimeTrackerPluginExtension): Printer {
+            return when (ext.output) {
+                Output.CONSOLE -> ConsolePrinter()
+                Output.CSV -> {
+                    ext.csvFilePath.parent.toFile().mkdirs()
+                    CsvPrinter(
+                        PrintStream(
+                            Files.newOutputStream(ext.csvFilePath, CREATE, WRITE, TRUNCATE_EXISTING),
+                            false,
+                            StandardCharsets.UTF_8.name()
+                        )
+                    )
+                }
+            }
+        }
     }
 }
