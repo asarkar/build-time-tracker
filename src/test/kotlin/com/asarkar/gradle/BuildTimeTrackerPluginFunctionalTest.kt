@@ -24,23 +24,25 @@ class BuildTimeTrackerPluginFunctionalTest {
             val props = it.resolve("gradle.properties")
             if (Files.exists(props)) props else it.parent
         }
-                .dropWhile { Files.isDirectory(it) }
-                .take(1)
-                .iterator()
-                .next()
+            .dropWhile { Files.isDirectory(it) }
+            .take(1)
+            .iterator()
+            .next()
 
         Files.newInputStream(propFile).use {
             val props = Properties().apply { load(it) }
             buildFile = Files.createFile(testProjectDir.resolve("build.gradle.kts"))
             Files.newBufferedWriter(buildFile, CREATE, WRITE, TRUNCATE_EXISTING).use {
-                it.write("""
+                it.write(
+                    """
                     import java.lang.Thread.sleep
                     import com.asarkar.gradle.BuildTimeTrackerPluginExtension
                     import java.time.Duration
                     plugins {
                         id("${props.getProperty("pluginId")}")
                     }
-                """.trimIndent())
+                    """.trimIndent()
+                )
                 it.newLine()
             }
         }
@@ -50,7 +52,8 @@ class BuildTimeTrackerPluginFunctionalTest {
     fun testPluginLoads() {
         val taskName = "hello"
         Files.newBufferedWriter(buildFile, APPEND).use {
-            it.write("""
+            it.write(
+                """
                 tasks.register("$taskName") {
                     doLast {
                         sleep(2000)
@@ -61,18 +64,19 @@ class BuildTimeTrackerPluginFunctionalTest {
                 configure<BuildTimeTrackerPluginExtension> {
                     minTaskDuration = Duration.ofSeconds(1)
                 }
-            """.trimIndent())
+                """.trimIndent()
+            )
         }
 
         println(buildFile.toFile().readText())
 
         val result = GradleRunner.create()
-                .withProjectDir(buildFile.parent.toFile())
-                .withArguments(taskName, "--warning-mode=all", "--stacktrace")
-                .withPluginClasspath()
-                .forwardOutput()
-                .withDebug(true)
-                .build()
+            .withProjectDir(buildFile.parent.toFile())
+            .withArguments(taskName, "--warning-mode=all", "--stacktrace")
+            .withPluginClasspath()
+            .forwardOutput()
+            .withDebug(true)
+            .build()
 
         assertThat(result.task(taskName)?.outcome == SUCCESS)
         assertThat(result.output).contains("== Build time summary ==")

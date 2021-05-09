@@ -16,15 +16,8 @@ Requires Java 8 or later.
       :webapp:dockerPushImage | 4S | 14% | ████
 ```
 
-> Due to a [Gradle limitation](https://docs.gradle.org/6.5.1/userguide/upgrading_version_5.html#apis_buildlistener_buildstarted_and_gradle_buildstarted_have_been_deprecated),
-the build duration can't be calculated precisely.
-The bars and percentages are rounded off such that the output provides a good indication of how long individual 
-tasks took to complete relative to the build, but are not meant to be correct up to the milliseconds.
-
-> If the output console does not support UTF-8 encoding, the bars may appear as weird characters. If you are running
-Windows, make sure the terminal encoding is set to UTF-8, or turn off the bars as explained below.
-
-See [Gradle Plugin Portal](https://plugins.gradle.org/plugin/com.asarkar.gradle.build-time-tracker) for usage instructions.
+See [Gradle Plugin Portal](https://plugins.gradle.org/plugin/com.asarkar.gradle.build-time-tracker) for usage 
+instructions.
 
 If you are the fiddling type, you can customize the plugin as follows:
 
@@ -41,11 +34,19 @@ configure<BuildTimeTrackerPluginExtension> { // or buildTimeTracker {...}, for G
 }
 ```
 
+:information_source: Due to a [Gradle limitation](https://docs.gradle.org/6.5.1/userguide/upgrading_version_5.html#apis_buildlistener_buildstarted_and_gradle_buildstarted_have_been_deprecated),
+the build duration can't be calculated precisely.
+The bars and percentages are rounded off such that the output provides a good indication of how long individual
+tasks took to complete relative to the build, but are not meant to be correct up to the milliseconds.
+
+:warning: If the output console does not support UTF-8 encoding, the bars may appear as weird characters. If you are 
+running Windows, make sure the terminal encoding is set to UTF-8, or turn off the bars as explained above.
+
 ## Contribute
 
-This project is a volunteer effort. You are welcome to send pull requests, ask questions, or create issues.
-If you like it, you can help by spreading the word!
+This project is a volunteer effort. You are welcome to send pull requests, ask questions, or create issues. If you like
+it, you can help by spreading the word and "Starring" the GitHub repo!
 
 ## License
 
-Copyright 2020 Abhijit Sarkar - Released under [Apache License v2.0](LICENSE).
+Copyright 2021 Abhijit Sarkar - Released under [Apache License v2.0](LICENSE).

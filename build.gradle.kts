@@ -1,6 +1,7 @@
 plugins {
     `java-gradle-plugin`
     kotlin("jvm")
+    id("org.jlleitschuh.gradle.ktlint")
     id("com.gradle.plugin-publish")
     `maven-publish`
 }
@@ -41,17 +42,15 @@ repositories {
     mavenCentral()
 }
 
-val jUnit5Version: String by project
-val assertJVersion: String by project
+val junitVersion: String by project
+val assertjVersion: String by project
 dependencies {
-    testImplementation("org.junit.jupiter:junit-jupiter-api:$jUnit5Version")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:$jUnit5Version")
-    testImplementation("org.assertj:assertj-core:$assertJVersion")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$jUnit5Version")
-}
-
-tasks.withType<Test> {
-    useJUnitPlatform()
+    implementation(kotlin("stdlib-jdk8"))
+    testImplementation(platform("org.junit:junit-bom:$junitVersion"))
+    testImplementation("org.junit.jupiter:junit-jupiter-api")
+    testImplementation("org.junit.jupiter:junit-jupiter-params")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+    testImplementation("org.assertj:assertj-core:$assertjVersion")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
@@ -61,9 +60,18 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     }
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+plugins.withType<JavaPlugin> {
+    extensions.configure<JavaPluginExtension> {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
+    testLogging {
+        showStandardStreams = true
+    }
 }
 
 publishing {

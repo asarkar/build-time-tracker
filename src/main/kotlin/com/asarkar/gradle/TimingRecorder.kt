@@ -31,11 +31,11 @@ class TimingRecorder(val ext: BuildTimeTrackerPluginExtension) : TaskExecutionLi
     override fun buildFinished(result: BuildResult) {
         if (taskDurations.isEmpty()) {
             val extra = (ext as ExtensionAware).extensions.getByType(
-                    object : TypeOf<Map<String, Any>>() {}
+                object : TypeOf<Map<String, Any>>() {}
             )
             (extra[Constants.LOGGER_KEY] as Logger).lifecycle(
-                    "All tasks completed within the minimum threshold: {}s, no build summary to show",
-                    ext.minTaskDuration.seconds
+                "All tasks completed within the minimum threshold: {}s, no build summary to show",
+                ext.minTaskDuration.seconds
             )
             return
         }
@@ -44,7 +44,7 @@ class TimingRecorder(val ext: BuildTimeTrackerPluginExtension) : TaskExecutionLi
             taskDurations.sortBy { -it.second }
         }
         Printer.newInstance(ext.output)
-                .print(PrinterInput(buildDuration, taskDurations, ext))
+            .print(PrinterInput(buildDuration, taskDurations, ext))
     }
 
     override fun projectsEvaluated(gradle: Gradle) {

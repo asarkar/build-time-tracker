@@ -29,12 +29,12 @@ open class BuildTimeTrackerPluginExtension {
 class BuildTimeTrackerPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         val ext = project.extensions.create(
-                PLUGIN_EXTENSION_NAME, BuildTimeTrackerPluginExtension::class.java
+            PLUGIN_EXTENSION_NAME, BuildTimeTrackerPluginExtension::class.java
         )
         (ext as ExtensionAware).extensions.add(
-                object : TypeOf<Map<String, Any>>() {},
-                EXTRA_EXTENSION_NAME,
-                mapOf<String, Any>(LOGGER_KEY to project.logger)
+            object : TypeOf<Map<String, Any>>() {},
+            EXTRA_EXTENSION_NAME,
+            mapOf<String, Any>(LOGGER_KEY to project.logger)
         )
         val timingRecorder = TimingRecorder(ext)
         project.gradle.addListener(timingRecorder)
