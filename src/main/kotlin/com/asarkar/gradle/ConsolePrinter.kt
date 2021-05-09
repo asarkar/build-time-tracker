@@ -8,7 +8,8 @@ class ConsolePrinter(private val out: PrintStream = System.out) : Printer {
     override fun print(input: PrinterInput) {
         // find the maxes needed for formatting
         val (maxLabelLen, maxDuration, maxFormattedDurationLen) = input.taskDurations.fold(
-                Triple(-1, -1L, -1)) { acc, elem ->
+            Triple(-1, -1L, -1)
+        ) { acc, elem ->
             val maxDuration = maxOf(acc.second, elem.second)
             Triple(maxOf(acc.first, elem.first.length), maxDuration, maxOf(acc.third, maxDuration.format().length))
         }
@@ -17,8 +18,8 @@ class ConsolePrinter(private val out: PrintStream = System.out) : Printer {
         val scalingFraction = minOf(input.ext.maxWidth.toLong(), maxDuration) / maxDuration.toDouble()
         val maxNumBlocks = round(maxDuration * scalingFraction).toInt()
         val maxFormattedPercentLen = maxDuration.percentOf(input.buildDuration)
-                .format()
-                .length
+            .format()
+            .length
 
         out.println("== Build time summary ==")
         input.taskDurations.forEach {
@@ -26,8 +27,8 @@ class ConsolePrinter(private val out: PrintStream = System.out) : Printer {
             val percent = it.second.percentOf(input.buildDuration)
 
             val common = String.format(
-                    "%${maxLabelLen}s | %${maxFormattedDurationLen}s | %${maxFormattedPercentLen}s",
-                    it.first, it.second.format(), percent.format()
+                "%${maxLabelLen}s | %${maxFormattedDurationLen}s | %${maxFormattedPercentLen}s",
+                it.first, it.second.format(), percent.format()
             )
 
             if (!input.ext.showBars) {
@@ -47,7 +48,7 @@ class ConsolePrinter(private val out: PrintStream = System.out) : Printer {
         internal fun Long.format(): String {
             val separators = setOf('P', 'D', 'T')
             return Duration.ofSeconds(this).toString()
-                    .filterNot { it in separators }
+                .filterNot { it in separators }
         }
         private fun Int.format(): String = String.format("%d%%", this)
     }
