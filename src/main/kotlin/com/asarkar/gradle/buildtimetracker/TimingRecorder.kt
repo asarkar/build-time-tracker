@@ -1,4 +1,4 @@
-package com.asarkar.gradle
+package com.asarkar.gradle.buildtimetracker
 
 import org.gradle.BuildAdapter
 import org.gradle.BuildResult
@@ -43,8 +43,10 @@ class TimingRecorder(val ext: BuildTimeTrackerPluginExtension) : TaskExecutionLi
         if (ext.sort) {
             taskDurations.sortBy { -it.second }
         }
-        Printer.newInstance(ext.output)
-            .print(PrinterInput(buildDuration, taskDurations, ext))
+        Printer.newInstance(ext)
+            .use {
+                it.print(PrinterInput(buildDuration, taskDurations, ext))
+            }
     }
 
     override fun projectsEvaluated(gradle: Gradle) {

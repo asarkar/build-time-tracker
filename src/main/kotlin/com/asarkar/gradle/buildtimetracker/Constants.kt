@@ -1,4 +1,4 @@
-package com.asarkar.gradle
+package com.asarkar.gradle.buildtimetracker
 
 object Constants {
     const val PLUGIN_EXTENSION_NAME = "buildTimeTracker"
