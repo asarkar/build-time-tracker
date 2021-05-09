@@ -39,6 +39,9 @@ the build duration can't be calculated precisely.
 The bars and percentages are rounded off such that the output provides a good indication of how long individual
 tasks took to complete relative to the build, but are not meant to be correct up to the milliseconds.
 
+:information_source: It is sufficient to apply the plugin to the root project; applying to subprojects will result 
+in duplication of the report.
+
 :warning: If the output console does not support UTF-8 encoding, the bars may appear as weird characters. If you are 
 running Windows, make sure the terminal encoding is set to UTF-8, or turn off the bars as explained above.
 
