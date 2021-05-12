@@ -4,7 +4,6 @@ import com.asarkar.gradle.buildtimetracker.Printer.Companion.BLOCK_CHAR
 import com.asarkar.gradle.buildtimetracker.Printer.Companion.format
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
 import org.junit.jupiter.api.io.TempDir
@@ -54,21 +53,6 @@ private fun String.toLine(barPosition: BarPosition, delimiter: String): Line {
 }
 
 class PrinterTest {
-    private lateinit var ext: BuildTimeTrackerPluginExtension
-    private lateinit var printerWrapper: PrinterWrapper
-
-    @BeforeEach
-    fun beforeEach() {
-        ext = BuildTimeTrackerPluginExtension()
-    }
-
-    @AfterEach
-    fun afterEach() {
-        if (this::printerWrapper.isInitialized) {
-            printerWrapper.delegate.close()
-        }
-    }
-
     private val taskDurations = listOf(
         ":commons:extractIncludeProto" to 4L,
         ":commons:compileKotlin" to 2L,
@@ -79,22 +63,32 @@ class PrinterTest {
         ":webapp:dockerPushImage" to 4L
     )
 
+    private val defaultInput = PrinterInput(
+        28L,
+        taskDurations,
+        Constants.DEFAULT_MAX_WIDTH,
+        Constants.DEFAULT_SHOW_BARS,
+        Constants.DEFAULT_BAR_POSITION
+    )
+    private lateinit var printerWrapper: PrinterWrapper
+
+    @AfterEach
+    fun afterEach() {
+        if (this::printerWrapper.isInitialized) {
+            printerWrapper.delegate.close()
+        }
+    }
+
     @ParameterizedTest
     @EnumSource(Output::class)
     fun testPrintDefault(output: Output) {
         printerWrapper = PrinterWrapper(output)
-        printerWrapper.delegate.print(
-            PrinterInput(
-                28L,
-                taskDurations,
-                ext
-            )
-        )
+        printerWrapper.delegate.print(defaultInput)
 
         val lines = printerWrapper.lines()
         val line = lines
             .first()
-            .toLine(ext.barPosition, printerWrapper.delegate.delimiter)
+            .toLine(defaultInput.barPosition, printerWrapper.delegate.delimiter)
         assertThat(line.task).isEqualTo(taskDurations[0].first)
         assertThat(line.duration).isEqualTo("4S")
         assertThat(line.percent).isEqualTo("14%")
@@ -112,18 +106,13 @@ class PrinterTest {
     @EnumSource(Output::class)
     fun testPrintLeadingBar(output: Output) {
         printerWrapper = PrinterWrapper(output)
-        printerWrapper.delegate.print(
-            PrinterInput(
-                28L,
-                taskDurations,
-                ext.apply { barPosition = BarPosition.LEADING }
-            )
-        )
+        val input = defaultInput.copy(barPosition = BarPosition.LEADING)
+        printerWrapper.delegate.print(input)
 
         val lines = printerWrapper.lines()
         val line = lines
             .first()
-            .toLine(ext.barPosition, printerWrapper.delegate.delimiter)
+            .toLine(input.barPosition, printerWrapper.delegate.delimiter)
         assertThat(line.bar.toCharArray().all { it == BLOCK_CHAR }).isTrue
         assertThat(line.duration).isEqualTo("4S")
         assertThat(line.percent).isEqualTo("14%")
@@ -141,18 +130,13 @@ class PrinterTest {
     @EnumSource(Output::class)
     fun testPrintScaled(output: Output) {
         printerWrapper = PrinterWrapper(output)
-        printerWrapper.delegate.print(
-            PrinterInput(
-                28L,
-                taskDurations,
-                ext.apply { maxWidth = 5 }
-            )
-        )
+        val input = defaultInput.copy(maxWidth = 5)
+        printerWrapper.delegate.print(input)
 
         printerWrapper.lines()
             .forEach {
-                val line = it.toLine(ext.barPosition, printerWrapper.delegate.delimiter)
-                assertThat(line.bar.length <= ext.maxWidth)
+                val line = it.toLine(input.barPosition, printerWrapper.delegate.delimiter)
+                assertThat(line.bar.length <= input.maxWidth)
             }
     }
 
@@ -161,13 +145,8 @@ class PrinterTest {
     // https://github.com/asarkar/build-time-tracker/issues/1
     fun testPrintHideBars(output: Output) {
         printerWrapper = PrinterWrapper(output)
-        printerWrapper.delegate.print(
-            PrinterInput(
-                28L,
-                taskDurations,
-                ext.apply { showBars = false }
-            )
-        )
+        val input = defaultInput.copy(showBars = false)
+        printerWrapper.delegate.print(input)
 
         printerWrapper.lines()
             .forEach {
@@ -180,16 +159,14 @@ class PrinterTest {
     // https://github.com/asarkar/build-time-tracker/issues/3
     fun testFormatting(output: Output, position: BarPosition) {
         printerWrapper = PrinterWrapper(output)
-        printerWrapper.delegate.print(
-            PrinterInput(
-                18L,
-                listOf(
-                    ":service-client:compileKotlin" to 1L,
-                    "webapp:test" to 13L
-                ),
-                ext.apply { barPosition = position }
-            )
+        val input = defaultInput.copy(
+            taskDurations = listOf(
+                ":service-client:compileKotlin" to 1L,
+                "webapp:test" to 13L
+            ),
+            barPosition = position
         )
+        printerWrapper.delegate.print(input)
 
         val lines = printerWrapper.lines()
         assertThat(lines).hasSize(2)
@@ -209,16 +186,14 @@ class PrinterTest {
     @EnumSource(Output::class)
     fun testFormattingHideBars(output: Output) {
         printerWrapper = PrinterWrapper(output)
-        printerWrapper.delegate.print(
-            PrinterInput(
-                18L,
-                listOf(
-                    ":service-client:compileKotlin" to 1L,
-                    "webapp:test" to 13L
-                ),
-                ext.apply { showBars = false }
-            )
+        val input = defaultInput.copy(
+            taskDurations = listOf(
+                ":service-client:compileKotlin" to 1L,
+                "webapp:test" to 13L
+            ),
+            showBars = false
         )
+        printerWrapper.delegate.print(input)
 
         val lines = printerWrapper.lines()
         assertThat(lines).hasSize(2)
@@ -238,19 +213,16 @@ class PrinterTest {
     @EnumSource(Output::class)
     fun testFormatHundredPercent(output: Output) {
         printerWrapper = PrinterWrapper(output)
-        printerWrapper.delegate.print(
-            PrinterInput(
-                10L,
-                listOf(
-                    ":service-client:compileKotlin" to 10L
-                ),
-                ext
+        val input = defaultInput.copy(
+            buildDuration = 10L,
+            taskDurations = listOf(
+                ":service-client:compileKotlin" to 10L
             )
         )
-
+        printerWrapper.delegate.print(input)
         val lines = printerWrapper.lines()
         assertThat(lines).hasSize(1)
-        assertThat(lines.last().toLine(ext.barPosition, printerWrapper.delegate.delimiter).percent)
+        assertThat(lines.last().toLine(input.barPosition, printerWrapper.delegate.delimiter).percent)
             .isEqualTo("100%")
     }
 
@@ -260,37 +232,19 @@ class PrinterTest {
         assertThat(duration.format()).isEqualTo(formatted)
     }
 
-    @Test
-    fun testCreateConsolePrinter() {
-        Printer.newInstance(ext)
-            .use {
-                assertThat(it).isInstanceOf(ConsolePrinter::class.java)
-            }
-    }
-
     @OptIn(ExperimentalPathApi::class)
     @Test
     fun testCsvPrinter(@TempDir testProjectDir: Path) {
-        val testFilePath = testProjectDir.resolve(ext.csvFilePath.resolveSibling("test.csv"))
-        val extCopy = ext.apply {
-            output = Output.CSV
-            csvFilePath = testFilePath
-        }
+        val csvFile = testProjectDir.resolve(Constants.CSV_FILENAME)
+        val csvPrinter = CsvPrinter(Printer.newOutputStream(csvFile.toFile()))
 
-        Printer.newInstance(extCopy).use { printer ->
-            assertThat(printer).isInstanceOf(CsvPrinter::class.java)
-            printer.print(
-                PrinterInput(
-                    28L,
-                    taskDurations,
-                    extCopy
-                )
-            )
-            assertThat(Files.exists(testFilePath)).isTrue
-            val lines = testFilePath.readLines()
+        csvPrinter.use { printer ->
+            printer.print(defaultInput)
+            assertThat(Files.exists(csvFile)).isTrue
+            val lines = csvFile.readLines()
             val line = lines
                 .first()
-                .toLine(ext.barPosition, printer.delimiter)
+                .toLine(defaultInput.barPosition, printer.delimiter)
             assertThat(line.task).isEqualTo(taskDurations[0].first)
             assertThat(line.duration).isEqualTo("4S")
             assertThat(line.percent).isEqualTo("14%")

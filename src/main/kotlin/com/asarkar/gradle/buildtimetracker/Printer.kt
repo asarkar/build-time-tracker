@@ -1,6 +1,7 @@
 package com.asarkar.gradle.buildtimetracker
 
 import java.io.Closeable
+import java.io.File
 import java.io.PrintStream
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
@@ -13,7 +14,9 @@ import kotlin.math.round
 data class PrinterInput(
     val buildDuration: Long,
     val taskDurations: List<Pair<String, Long>>,
-    val ext: BuildTimeTrackerPluginExtension
+    val maxWidth: Int,
+    val showBars: Boolean,
+    val barPosition: BarPosition
 )
 
 interface Printer : Closeable {
@@ -27,7 +30,7 @@ interface Printer : Closeable {
         }
 
         // scale the values to max column width so that the corresponding bars don't shoot out of the screen
-        val scalingFraction = minOf(input.ext.maxWidth.toLong(), maxDuration) / maxDuration.toDouble()
+        val scalingFraction = minOf(input.maxWidth.toLong(), maxDuration) / maxDuration.toDouble()
         val maxNumBlocks = round(maxDuration * scalingFraction).toInt()
         val maxFormattedPercentLen = maxDuration.percentOf(input.buildDuration)
             .format()
@@ -42,9 +45,9 @@ interface Printer : Closeable {
                 it.first, delimiter, it.second.format(), delimiter, percent.format()
             )
 
-            if (!input.ext.showBars) {
+            if (!input.showBars) {
                 out.println(common)
-            } else if (input.ext.barPosition == BarPosition.TRAILING) {
+            } else if (input.barPosition == BarPosition.TRAILING) {
                 out.printf("%s%s%s\n", common, delimiter, "$BLOCK_CHAR".repeat(numBlocks))
             } else {
                 out.printf("%${maxNumBlocks}s%s%s\n", "$BLOCK_CHAR".repeat(numBlocks), delimiter, common)
@@ -68,19 +71,24 @@ interface Printer : Closeable {
         private fun Int.format(): String = String.format("%d%%", this)
 
         fun newInstance(ext: BuildTimeTrackerPluginExtension): Printer {
-            return when (ext.output) {
+            return when (ext.output.get()) {
                 Output.CONSOLE -> ConsolePrinter()
                 Output.CSV -> {
-                    ext.csvFilePath.parent.toFile().mkdirs()
-                    CsvPrinter(
-                        PrintStream(
-                            Files.newOutputStream(ext.csvFilePath, CREATE, WRITE, TRUNCATE_EXISTING),
-                            false,
-                            StandardCharsets.UTF_8.name()
-                        )
-                    )
+                    val csvFile = ext.reportsDir.get()
+                        .file(Constants.CSV_FILENAME)
+                        .asFile
+                    CsvPrinter(newOutputStream(csvFile))
                 }
             }
+        }
+
+        internal fun newOutputStream(csvFile: File): PrintStream {
+            csvFile.parentFile.mkdirs()
+            return PrintStream(
+                Files.newOutputStream(csvFile.toPath(), CREATE, WRITE, TRUNCATE_EXISTING),
+                false,
+                StandardCharsets.UTF_8.name()
+            )
         }
     }
 }

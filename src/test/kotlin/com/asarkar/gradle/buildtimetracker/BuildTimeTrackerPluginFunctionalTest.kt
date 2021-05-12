@@ -4,7 +4,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome.SUCCESS
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Files
@@ -43,17 +42,14 @@ class BuildTimeTrackerPluginFunctionalTest {
             Properties().apply { load(it) }
         }
 
-    @BeforeEach
-    fun beforeEach() {
-        buildFile = Files.createFile(testProjectDir.resolve("build.gradle.kts"))
+    private fun newBuildFile(name: String) {
+        buildFile = Files.createFile(testProjectDir.resolve(name))
         Files.newBufferedWriter(buildFile, CREATE, WRITE, TRUNCATE_EXISTING).use {
             it.write(
                 """
                     import ${Thread::class.qualifiedName}
-                    import ${BuildTimeTrackerPluginExtension::class.qualifiedName}
                     import ${Output::class.qualifiedName}
                     import ${Duration::class.qualifiedName}
-                    import ${Paths::class.qualifiedName}
                     
                     plugins {
                         id("${props.getProperty("pluginId")}")
@@ -72,11 +68,40 @@ class BuildTimeTrackerPluginFunctionalTest {
     }
 
     @Test
-    fun testConsoleOutput() {
+    fun testConsoleOutputKotlin() {
+        newBuildFile("build.gradle.kts")
         Files.newBufferedWriter(buildFile, APPEND).use {
             it.write(
                 """
-                configure<${BuildTimeTrackerPluginExtension::class.simpleName}> {
+                ${Constants.PLUGIN_EXTENSION_NAME} {
+                    minTaskDuration.set(Duration.ofMillis(100))
+                }
+                """.trimIndent()
+            )
+        }
+
+        println(buildFile.readText())
+
+        val result = run()
+
+        assertThat(result.task(taskName)?.outcome == SUCCESS)
+        val lines = result.output
+            .lines()
+            .filter { it.isNotEmpty() }
+        assertThat(lines).hasSizeGreaterThanOrEqualTo(4)
+        assertThat(lines[0]).isEqualTo("> Task :$taskName")
+        assertThat(lines[1]).isEqualTo("Hello, World!")
+        assertThat(lines[2]).isEqualTo("== Build time summary ==")
+        assertThat(lines[3]).isEqualTo(":$taskName | 0S | 0% | ")
+    }
+
+    @Test
+    fun testConsoleOutputGroovy() {
+        newBuildFile("build.gradle")
+        Files.newBufferedWriter(buildFile, APPEND).use {
+            it.write(
+                """
+                ${Constants.PLUGIN_EXTENSION_NAME} {
                     minTaskDuration = Duration.ofMillis(100)
                 }
                 """.trimIndent()
@@ -99,16 +124,15 @@ class BuildTimeTrackerPluginFunctionalTest {
     }
 
     @Test
-    fun testCsvOutput() {
-        val csvFilePath = testProjectDir.resolve(BuildTimeTrackerPluginExtension().csvFilePath)
-
+    fun testCsvOutputKotlin() {
+        newBuildFile("build.gradle.kts")
         Files.newBufferedWriter(buildFile, APPEND).use {
             it.write(
                 """
-                configure<${BuildTimeTrackerPluginExtension::class.simpleName}> {
-                    minTaskDuration = Duration.ofMillis(100)
-                    output = Output.CSV
-                    csvFilePath = Paths.get("${csvFilePath.absolutePathString()}")
+                ${Constants.PLUGIN_EXTENSION_NAME} {
+                    minTaskDuration.set(Duration.ofMillis(100))
+                    output.set(Output.CSV)
+                    reportsDir.set(file("${testProjectDir.absolutePathString()}"))
                 }
                 """.trimIndent()
             )
@@ -117,10 +141,36 @@ class BuildTimeTrackerPluginFunctionalTest {
         println(buildFile.readText())
 
         val result = run()
-
+        val csvFile = testProjectDir.resolve(Constants.CSV_FILENAME)
         assertThat(result.task(taskName)?.outcome == SUCCESS)
-        assertThat(Files.exists(csvFilePath)).isTrue
-        val lines = csvFilePath.readLines()
+        assertThat(Files.exists(csvFile)).isTrue
+        val lines = csvFile.readLines()
+        assertThat(lines).hasSize(1)
+        assertThat(lines.first()).isEqualTo(":$taskName,0S,0%,")
+    }
+
+    @Test
+    fun testCsvOutputGroovy() {
+        newBuildFile("build.gradle")
+        Files.newBufferedWriter(buildFile, APPEND).use {
+            it.write(
+                """
+                ${Constants.PLUGIN_EXTENSION_NAME} {
+                    minTaskDuration = Duration.ofMillis(100)
+                    output = Output.CSV
+                    reportsDir = file("${testProjectDir.absolutePathString()}")
+                }
+                """.trimIndent()
+            )
+        }
+
+        println(buildFile.readText())
+
+        val result = run()
+        val csvFile = testProjectDir.resolve(Constants.CSV_FILENAME)
+        assertThat(result.task(taskName)?.outcome == SUCCESS)
+        assertThat(Files.exists(csvFile)).isTrue
+        val lines = csvFile.readLines()
         assertThat(lines).hasSize(1)
         assertThat(lines.first()).isEqualTo(":$taskName,0S,0%,")
     }

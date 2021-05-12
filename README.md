@@ -21,18 +21,18 @@ instructions.
 If you are the fiddling type, you can customize the plugin as follows:
 
 ```
-import com.asarkar.gradle.buildtimetracker.BuildTimeTrackerPluginExtension
-// bunch of code
-configure<BuildTimeTrackerPluginExtension> { // or buildTimeTracker {...}, for Groovy
+buildTimeTracker {
     barPosition = TRAILING or LEADING, default is TRAILING
     sort = false or true, default is false
     output = CONSOLE or CSV, default is CONSOLE
     maxWidth = 120, default is 80
     minTaskDuration = Duration.ofSeconds(1), don't show tasks that take less than a second to execute
     showBars = false or true, default is true
-    csvFilePath = /path/to/csv, only relevant if output = CSV, default build/reports/buildTimeTracker/build.csv
+    reportsDir = only relevant if output = CSV, default $buildDir/reports/buildTimeTracker
 }
 ```
+
+> If you are using Kotlin build script, set the configuration properties using `property.set()` method.
 
 :information_source: Due to a
 [Gradle limitation](https://docs.gradle.org/6.5.1/userguide/upgrading_version_5.html#apis_buildlistener_buildstarted_and_gradle_buildstarted_have_been_deprecated)
