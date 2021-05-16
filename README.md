@@ -1,7 +1,6 @@
 # build-time-tracker
 
-Like [passy/build-time-tracker-plugin](https://github.com/passy/build-time-tracker-plugin), but actively maintained.
-Requires Java 8 or later.
+Gradle plugin that prints the time taken by the tasks in a build. Requires Java 8 or later.
 
 [![](https://github.com/asarkar/build-time-tracker/workflows/CI%20Pipeline/badge.svg)](https://github.com/asarkar/build-time-tracker/actions?query=workflow%3A%22CI+Pipeline%22)
 
@@ -16,34 +15,41 @@ Requires Java 8 or later.
       :webapp:dockerPushImage | 4S | 14% | ████
 ```
 
-See [Gradle Plugin Portal](https://plugins.gradle.org/plugin/com.asarkar.gradle.build-time-tracker) for usage 
+See [Gradle Plugin Portal](https://plugins.gradle.org/plugin/com.asarkar.gradle.build-time-tracker) for usage
 instructions.
 
 If you are the fiddling type, you can customize the plugin as follows:
 
 ```
-import com.asarkar.gradle.BuildTimeTrackerPluginExtension
-// bunch of code
-configure<BuildTimeTrackerPluginExtension> { // or buildTimeTracker {...}, for Groovy
+buildTimeTracker {
     barPosition = TRAILING or LEADING, default is TRAILING
     sort = false or true, default is false
-    output = CONSOLE, other options may be added in the future
-    maxWidth = 80, so that your build logs don't look like Craigslist
-    minTaskDuration = Duration.ofSeconds(1), don't worry about tasks that take less than a second to execute
+    output = CONSOLE or CSV, default is CONSOLE
+    maxWidth = 120, default is 80
+    minTaskDuration = Duration.ofSeconds(1), don't show tasks that take less than a second to execute
     showBars = false or true, default is true
+    reportsDir = only relevant if output = CSV, default $buildDir/reports/buildTimeTracker
 }
 ```
 
-:information_source: Due to a [Gradle limitation](https://docs.gradle.org/6.5.1/userguide/upgrading_version_5.html#apis_buildlistener_buildstarted_and_gradle_buildstarted_have_been_deprecated),
-the build duration can't be calculated precisely.
-The bars and percentages are rounded off such that the output provides a good indication of how long individual
-tasks took to complete relative to the build, but are not meant to be correct up to the milliseconds.
+> If you are using Kotlin build script, set the configuration properties using `property.set()` method.
 
-:information_source: It is sufficient to apply the plugin to the root project; applying to subprojects will result 
-in duplication of the report.
+:information_source: Due to a
+[Gradle limitation](https://docs.gradle.org/6.5.1/userguide/upgrading_version_5.html#apis_buildlistener_buildstarted_and_gradle_buildstarted_have_been_deprecated)
+, the build duration can't be calculated precisely. The bars and percentages are rounded off such that the output
+provides a good indication of how long individual tasks took to complete relative to the build, but are not meant to be
+correct up to the milliseconds.
 
-:warning: If the output console does not support UTF-8 encoding, the bars may appear as weird characters. If you are 
+:information_source: It is sufficient to apply the plugin to the root project; applying to subprojects will result in
+duplication of the report.
+
+:warning: If the output terminal does not support UTF-8 encoding, the bars may appear as weird characters. If you are
 running Windows, make sure the terminal encoding is set to UTF-8, or turn off the bars as explained above.
+
+:warning: If exporting to CSV, and bars are enabled, the resulting file must be imported as UTF-8 encoded CSV data in
+Microsoft Excel. How to do this depends on the Operating System, and Excel version, but
+[here](https://answers.microsoft.com/en-us/msoffice/forum/msoffice_excel-mso_mac-mso_365hp/how-to-open-utf-8-csv-file-in-excel-without-mis/1eb15700-d235-441e-8b99-db10fafff3c2)
+is one way.
 
 ## Contribute
 

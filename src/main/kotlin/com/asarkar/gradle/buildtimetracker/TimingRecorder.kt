@@ -1,4 +1,4 @@
-package com.asarkar.gradle
+package com.asarkar.gradle.buildtimetracker
 
 import org.gradle.BuildAdapter
 import org.gradle.BuildResult
@@ -12,7 +12,7 @@ import org.gradle.api.tasks.TaskState
 import java.time.Duration
 import java.time.Instant
 
-class TimingRecorder(val ext: BuildTimeTrackerPluginExtension) : TaskExecutionListener, BuildAdapter() {
+class TimingRecorder(private val ext: BuildTimeTrackerPluginExtension) : TaskExecutionListener, BuildAdapter() {
     private lateinit var taskStarted: Instant
     private lateinit var buildStarted: Instant
     private val taskDurations = mutableListOf<Pair<String, Long>>()
@@ -23,7 +23,7 @@ class TimingRecorder(val ext: BuildTimeTrackerPluginExtension) : TaskExecutionLi
 
     override fun afterExecute(task: Task, state: TaskState) {
         val duration = Duration.between(taskStarted, Instant.now()).seconds
-        if (duration >= ext.minTaskDuration.seconds) {
+        if (duration >= ext.minTaskDuration.get().seconds) {
             taskDurations.add(task.path to duration)
         }
     }
@@ -35,16 +35,25 @@ class TimingRecorder(val ext: BuildTimeTrackerPluginExtension) : TaskExecutionLi
             )
             (extra[Constants.LOGGER_KEY] as Logger).lifecycle(
                 "All tasks completed within the minimum threshold: {}s, no build summary to show",
-                ext.minTaskDuration.seconds
+                ext.minTaskDuration.get().seconds
             )
             return
         }
         val buildDuration = Duration.between(buildStarted, Instant.now()).seconds
-        if (ext.sort) {
+        if (ext.sort.get()) {
             taskDurations.sortBy { -it.second }
         }
-        Printer.newInstance(ext.output)
-            .print(PrinterInput(buildDuration, taskDurations, ext))
+        Printer.newInstance(ext)
+            .use {
+                val input = PrinterInput(
+                    buildDuration,
+                    taskDurations,
+                    ext.maxWidth.get(),
+                    ext.showBars.get(),
+                    ext.barPosition.get()
+                )
+                it.print(input)
+            }
     }
 
     override fun projectsEvaluated(gradle: Gradle) {
