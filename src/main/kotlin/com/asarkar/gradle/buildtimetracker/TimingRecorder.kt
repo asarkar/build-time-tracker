@@ -11,18 +11,21 @@ import org.gradle.api.reflect.TypeOf
 import org.gradle.api.tasks.TaskState
 import java.time.Duration
 import java.time.Instant
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentLinkedQueue
 
 class TimingRecorder(private val ext: BuildTimeTrackerPluginExtension) : TaskExecutionListener, BuildAdapter() {
-    private lateinit var taskStarted: Instant
+    private val taskStartTimings: MutableMap<String, Instant> = ConcurrentHashMap()
+    private val taskDurations: MutableCollection<Pair<String, Long>> = ConcurrentLinkedQueue()
     private lateinit var buildStarted: Instant
-    private val taskDurations = mutableListOf<Pair<String, Long>>()
 
     override fun beforeExecute(task: Task) {
-        taskStarted = Instant.now()
+        taskStartTimings[task.path] = Instant.now()
     }
 
     override fun afterExecute(task: Task, state: TaskState) {
-        val duration = Duration.between(taskStarted, Instant.now()).seconds
+        check(taskStartTimings.contains(task.path)) { "No start timing for task ${task.path}" }
+        val duration = Duration.between(taskStartTimings[task.path], Instant.now()).seconds
         if (duration >= ext.minTaskDuration.get().seconds) {
             taskDurations.add(task.path to duration)
         }
@@ -40,19 +43,16 @@ class TimingRecorder(private val ext: BuildTimeTrackerPluginExtension) : TaskExe
             return
         }
         val buildDuration = Duration.between(buildStarted, Instant.now()).seconds
-        if (ext.sort.get()) {
-            taskDurations.sortBy { -it.second }
-        }
         Printer.newInstance(ext)
-            .use {
+            .use { printer ->
                 val input = PrinterInput(
                     buildDuration,
-                    taskDurations,
+                    if (ext.sort.get()) taskDurations.sortedBy { -it.second } else taskDurations,
                     ext.maxWidth.get(),
                     ext.showBars.get(),
                     ext.barPosition.get()
                 )
-                it.print(input)
+                printer.print(input)
             }
     }
 

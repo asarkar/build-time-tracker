@@ -13,7 +13,7 @@ import kotlin.math.round
 
 data class PrinterInput(
     val buildDuration: Long,
-    val taskDurations: List<Pair<String, Long>>,
+    val taskDurations: Collection<Pair<String, Long>>,
     val maxWidth: Int,
     val showBars: Boolean,
     val barPosition: BarPosition
