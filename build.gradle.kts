@@ -56,14 +56,14 @@ dependencies {
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
     kotlinOptions {
         freeCompilerArgs = listOf("-Xjsr305=strict", "-Xopt-in=kotlin.RequiresOptIn")
-        jvmTarget = "1.8"
+        jvmTarget = "11"
     }
 }
 
 plugins.withType<JavaPlugin>().configureEach {
     extensions.configure<JavaPluginExtension> {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 }
 
@@ -80,4 +80,8 @@ publishing {
             mavenLocal()
         }
     }
+}
+
+tasks.wrapper {
+    distributionType = Wrapper.DistributionType.BIN
 }
