@@ -1,6 +1,6 @@
 # build-time-tracker
 
-Gradle plugin that prints the time taken by the tasks in a build. Requires Java 8 or later.
+Gradle plugin that prints the time taken by the tasks in a build.
 
 [![](https://github.com/asarkar/build-time-tracker/workflows/CI%20Pipeline/badge.svg)](https://github.com/asarkar/build-time-tracker/actions?query=workflow%3A%22CI+Pipeline%22)
 
@@ -51,6 +51,10 @@ Microsoft Excel. How to do this depends on the Operating System, and Excel versi
 [here](https://answers.microsoft.com/en-us/msoffice/forum/msoffice_excel-mso_mac-mso_365hp/how-to-open-utf-8-csv-file-in-excel-without-mis/1eb15700-d235-441e-8b99-db10fafff3c2)
 is one way.
 
+## Minimum Requirements
+- Java 11
+- Gradle 6.1
+
 ## Contribute
 
 This project is a volunteer effort. You are welcome to send pull requests, ask questions, or create issues. If you like
@@ -58,4 +62,4 @@ it, you can help by spreading the word and "Starring" the GitHub repo!
 
 ## License
 
-Copyright 2021 Abhijit Sarkar - Released under [Apache License v2.0](LICENSE).
+Copyright 2022 Abhijit Sarkar - Released under [Apache License v2.0](LICENSE).
