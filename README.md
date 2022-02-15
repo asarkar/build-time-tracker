@@ -60,6 +60,10 @@ is one way.
 This project is a volunteer effort. You are welcome to send pull requests, ask questions, or create issues. If you like
 it, you can help by spreading the word and "Starring" the GitHub repo!
 
+## Code of Conduct
+
+This project adheres to the Contributor Covenant [code of conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
+
 ## License
 
 Copyright 2022 Abhijit Sarkar - Released under [Apache License v2.0](LICENSE).
