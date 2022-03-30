@@ -1,26 +1,40 @@
 package com.asarkar.gradle.buildtimetracker
 
-import com.asarkar.gradle.buildtimetracker.Constants.EXTRA_EXTENSION_NAME
-import com.asarkar.gradle.buildtimetracker.Constants.LOGGER_KEY
 import com.asarkar.gradle.buildtimetracker.Constants.PLUGIN_EXTENSION_NAME
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.plugins.ExtensionAware
 import org.gradle.api.plugins.ReportingBasePlugin
-import org.gradle.api.reflect.TypeOf
+import org.gradle.build.event.BuildEventsListenerRegistry
+import javax.inject.Inject
 
-class BuildTimeTrackerPlugin : Plugin<Project> {
+@Suppress("UnstableApiUsage")
+class BuildTimeTrackerPlugin @Inject constructor(private val registry: BuildEventsListenerRegistry) : Plugin<Project> {
     override fun apply(project: Project) {
         project.pluginManager.apply(ReportingBasePlugin::class.java)
         val ext = project.extensions.create(
             PLUGIN_EXTENSION_NAME, BuildTimeTrackerPluginExtension::class.java, project
         )
-        (ext as ExtensionAware).extensions.add(
-            object : TypeOf<Map<String, Any>>() {},
-            EXTRA_EXTENSION_NAME,
-            mapOf<String, Any>(LOGGER_KEY to project.logger)
-        )
-        val timingRecorder = TimingRecorder(ext)
-        project.gradle.addListener(timingRecorder)
+        val clazz = TimingRecorder::class.java
+        val timingRecorder =
+            project.gradle.sharedServices.registerIfAbsent(clazz.simpleName, clazz) { spec ->
+                val params = BuildTimeTrackerPluginParams(ext.reportsDir.get().asFile)
+                spec.parameters.getParams().set(params)
+            }
+
+        project.gradle.projectsEvaluated {
+            copyParams(ext, timingRecorder.get().parameters.getParams().get())
+        }
+
+        registry.onTaskCompletion(timingRecorder)
+    }
+
+    private fun copyParams(src: BuildTimeTrackerPluginExtension, dest: BuildTimeTrackerPluginParams) {
+        dest.barPosition = src.barPosition.get()
+        dest.sort = src.sort.get()
+        dest.output = src.output.get()
+        dest.maxWidth = src.maxWidth.get()
+        dest.minTaskDuration = src.minTaskDuration.get()
+        dest.showBars = src.showBars.get()
+        dest.reportsDir = src.reportsDir.get().asFile
     }
 }

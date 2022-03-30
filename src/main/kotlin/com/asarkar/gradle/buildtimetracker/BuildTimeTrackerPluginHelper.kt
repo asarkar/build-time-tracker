@@ -4,6 +4,7 @@ import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.reporting.ReportingExtension
+import java.io.File
 import java.time.Duration
 
 enum class BarPosition {
@@ -33,4 +34,13 @@ open class BuildTimeTrackerPluginExtension(private val project: Project) {
     private val baseReportsDir: DirectoryProperty
         get() = project.extensions.getByType(ReportingExtension::class.java)
             .baseDirectory
+}
+
+open class BuildTimeTrackerPluginParams(var reportsDir: File) : java.io.Serializable {
+    var barPosition = Constants.DEFAULT_BAR_POSITION
+    var sort = Constants.DEFAULT_SORT
+    var output = Constants.DEFAULT_OUTPUT
+    var maxWidth = Constants.DEFAULT_MAX_WIDTH
+    var minTaskDuration: Duration = Duration.ofSeconds(Constants.DEFAULT_MIN_TASK_DURATION)
+    var showBars = Constants.DEFAULT_SHOW_BARS
 }
