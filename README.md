@@ -1,7 +1,7 @@
 # build-time-tracker
 
 Gradle plugin that prints the time taken by the tasks in a build. If you like it, consider becoming a
-![GitHub Sponsor](https://img.shields.io/github/sponsors/asarkar?label=Sponsor&logo=GitHub).
+[![](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86)](https://github.com/sponsors/asarkar).
 
 [![](https://github.com/asarkar/build-time-tracker/workflows/CI%20Pipeline/badge.svg)](https://github.com/asarkar/build-time-tracker/actions?query=workflow%3A%22CI+Pipeline%22)
 
