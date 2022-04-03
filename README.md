@@ -1,6 +1,7 @@
 # build-time-tracker
 
-Gradle plugin that prints the time taken by the tasks in a build.
+Gradle plugin that prints the time taken by the tasks in a build. If you like it, consider becoming a
+![GitHub Sponsor](https://img.shields.io/github/sponsors/asarkar?label=Sponsor&logo=GitHub).
 
 [![](https://github.com/asarkar/build-time-tracker/workflows/CI%20Pipeline/badge.svg)](https://github.com/asarkar/build-time-tracker/actions?query=workflow%3A%22CI+Pipeline%22)
 
@@ -36,9 +37,10 @@ buildTimeTracker {
 
 :information_source: Due to a
 [Gradle limitation](https://docs.gradle.org/6.5.1/userguide/upgrading_version_5.html#apis_buildlistener_buildstarted_and_gradle_buildstarted_have_been_deprecated)
-, the build duration can't be calculated precisely. The bars and percentages are rounded off such that the output
-provides a good indication of how long individual tasks took to complete relative to the build, but are not meant to be
-correct up to the milliseconds.
+and the ill-thought-out [Configuration Cache](https://github.com/gradle/gradle/issues/18520) design, the build duration
+can't be calculated precisely. The bars and percentages are rounded off such that the output provides a good indication 
+of how long individual tasks took to complete relative to the build, but are not meant to be correct up to the 
+milliseconds.
 
 :information_source: It is sufficient to apply the plugin to the root project; applying to subprojects will result in
 duplication of the report.
@@ -55,14 +57,14 @@ is one way.
 - Java 11
 - Gradle 6.1
 
-## Contribute
+## Contribution
 
-This project is a volunteer effort. You are welcome to send pull requests, ask questions, or create issues. If you like
-it, you can help by spreading the word and "Starring" the GitHub repo!
+This project is a volunteer effort. You are welcome to send pull requests, ask questions, or create issues.
 
 ## Code of Conduct
 
-This project adheres to the Contributor Covenant [code of conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
+This project adheres to the Contributor Covenant [code of conduct](https://github.com/asarkar/.github/blob/main/CODE_OF_CONDUCT.md).
+By participating, you are expected to uphold this code.
 
 ## License
 

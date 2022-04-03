@@ -70,13 +70,12 @@ interface Printer : Closeable {
 
         private fun Int.format(): String = String.format("%d%%", this)
 
-        fun newInstance(ext: BuildTimeTrackerPluginExtension): Printer {
-            return when (ext.output.get()) {
+        fun newInstance(params: BuildTimeTrackerPluginParams): Printer {
+            return when (params.output) {
                 Output.CONSOLE -> ConsolePrinter()
                 Output.CSV -> {
-                    val csvFile = ext.reportsDir.get()
-                        .file(Constants.CSV_FILENAME)
-                        .asFile
+                    val csvFile = params.reportsDir
+                        .resolve(Constants.CSV_FILENAME)
                     CsvPrinter(newOutputStream(csvFile))
                 }
             }
