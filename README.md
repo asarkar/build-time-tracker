@@ -63,7 +63,9 @@ is one way.
 
 ## Contribution
 
-This project is a volunteer effort. You are welcome to send pull requests, ask questions, or create issues.
+This project is a volunteer effort. You are welcome to send pull requests, 
+[ask questions](https://github.com/asarkar/build-time-tracker/discussions),
+or [create issues](https://github.com/asarkar/build-time-tracker/issues/new/choose).
 
 ## Code of Conduct
 
