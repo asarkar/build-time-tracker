@@ -37,9 +37,14 @@ abstract class TimingRecorder : BuildService<TimingRecorder.Params>, OperationCo
         val buildDuration = Duration.between(buildStarted, Instant.now()).seconds
         Printer.newInstance(params)
             .use { printer ->
+                val durations = when (params.sortBy) {
+                    Sort.NONE -> taskDurations
+                    Sort.DESC -> taskDurations.sortedBy { -it.second }
+                    Sort.ASC -> taskDurations.sortedBy { it.second }
+                }
                 val input = PrinterInput(
                     buildDuration,
-                    if (params.sort) taskDurations.sortedBy { -it.second } else taskDurations,
+                    durations,
                     params.maxWidth,
                     params.showBars,
                     params.barPosition
