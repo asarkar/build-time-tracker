@@ -15,11 +15,19 @@ enum class Output {
     CONSOLE, CSV
 }
 
+enum class Sort {
+    ASC, DESC, NONE
+}
+
 open class BuildTimeTrackerPluginExtension(private val project: Project) {
     val barPosition: Property<BarPosition> = project.objects.property(BarPosition::class.java)
         .convention(Constants.DEFAULT_BAR_POSITION)
+
+    @Deprecated("Will be removed in v5, use sortBy")
     val sort: Property<Boolean> = project.objects.property(Boolean::class.java)
-        .convention(Constants.DEFAULT_SORT)
+        .convention(false)
+    val sortBy: Property<Sort> = project.objects.property(Sort::class.java)
+        .convention(Constants.DEFAULT_SORT_BY)
     val output: Property<Output> = project.objects.property(Output::class.java)
         .convention(Constants.DEFAULT_OUTPUT)
     val maxWidth: Property<Int> = project.objects.property(Int::class.java)
@@ -38,7 +46,7 @@ open class BuildTimeTrackerPluginExtension(private val project: Project) {
 
 open class BuildTimeTrackerPluginParams(var reportsDir: File) : java.io.Serializable {
     var barPosition = Constants.DEFAULT_BAR_POSITION
-    var sort = Constants.DEFAULT_SORT
+    var sortBy = Constants.DEFAULT_SORT_BY
     var output = Constants.DEFAULT_OUTPUT
     var maxWidth = Constants.DEFAULT_MAX_WIDTH
     var minTaskDuration: Duration = Duration.ofSeconds(Constants.DEFAULT_MIN_TASK_DURATION)

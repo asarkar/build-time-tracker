@@ -50,6 +50,7 @@ class BuildTimeTrackerPluginFunctionalTest {
                     import ${Thread::class.qualifiedName}
                     import ${Output::class.qualifiedName}
                     import ${Duration::class.qualifiedName}
+                    import ${Sort::class.qualifiedName}
                     
                     plugins {
                         id("${props.getProperty("pluginId")}")
@@ -82,7 +83,7 @@ class BuildTimeTrackerPluginFunctionalTest {
 
         println(buildFile.readText())
 
-        val result = run()
+        val result = run(taskName)
 
         assertThat(result.task(taskName)?.outcome == SUCCESS)
         val lines = result.output
@@ -110,7 +111,7 @@ class BuildTimeTrackerPluginFunctionalTest {
 
         println(buildFile.readText())
 
-        val result = run()
+        val result = run(taskName)
 
         assertThat(result.task(taskName)?.outcome == SUCCESS)
         val lines = result.output
@@ -140,7 +141,7 @@ class BuildTimeTrackerPluginFunctionalTest {
 
         println(buildFile.readText())
 
-        val result = run()
+        val result = run(taskName)
         val csvFile = testProjectDir.resolve(Constants.CSV_FILENAME)
         assertThat(result.task(taskName)?.outcome == SUCCESS)
         assertThat(Files.exists(csvFile)).isTrue
@@ -166,7 +167,7 @@ class BuildTimeTrackerPluginFunctionalTest {
 
         println(buildFile.readText())
 
-        val result = run()
+        val result = run(taskName)
         val csvFile = testProjectDir.resolve(Constants.CSV_FILENAME)
         assertThat(result.task(taskName)?.outcome == SUCCESS)
         assertThat(Files.exists(csvFile)).isTrue
@@ -175,10 +176,142 @@ class BuildTimeTrackerPluginFunctionalTest {
         assertThat(lines.first()).isEqualTo(":$taskName,0S,0%,")
     }
 
-    private fun run(): BuildResult {
+    @Test
+    fun testSort() {
+        newBuildFile("build.gradle.kts")
+        Files.newBufferedWriter(buildFile, APPEND).use {
+            it.write(
+                """
+                    tasks.register("a") {
+                        doLast {
+                            Thread.sleep(1100)
+                            println("Hello, World!")
+                        }
+                    }
+                    tasks.register("b") {
+                        doLast {
+                            Thread.sleep(2100)
+                            println("Hi there!")
+                        }
+                    }
+                    ${Constants.PLUGIN_EXTENSION_NAME} {
+                        minTaskDuration.set(Duration.ofMillis(100))
+                        sort.set(true)
+                    }
+                """.trimIndent()
+            )
+        }
+
+        println(buildFile.readText())
+
+        val result = run("a", "b")
+
+        assertThat(result.task(taskName)?.outcome == SUCCESS)
+        val lines = result.output
+            .lines()
+            .filter { it.isNotEmpty() }
+        assertThat(lines).hasSizeGreaterThanOrEqualTo(4)
+        assertThat(lines[0]).isEqualTo("> Task :a")
+        assertThat(lines[1]).isEqualTo("Hello, World!")
+        assertThat(lines[2]).isEqualTo("> Task :b")
+        assertThat(lines[3]).isEqualTo("Hi there!")
+        assertThat(lines[4]).isEqualTo("== Build time summary ==")
+        assertThat(lines[5]).isEqualTo(":b | 2S | 67% | ${Printer.BLOCK_CHAR.toString().repeat(2)}")
+        assertThat(lines[6]).isEqualTo(":a | 1S | 33% | ${Printer.BLOCK_CHAR}")
+    }
+
+    @Test
+    fun testSortByDesc() {
+        newBuildFile("build.gradle.kts")
+        Files.newBufferedWriter(buildFile, APPEND).use {
+            it.write(
+                """
+                    tasks.register("a") {
+                        doLast {
+                            Thread.sleep(1100)
+                            println("Hello, World!")
+                        }
+                    }
+                    tasks.register("b") {
+                        doLast {
+                            Thread.sleep(2100)
+                            println("Hi there!")
+                        }
+                    }
+                    ${Constants.PLUGIN_EXTENSION_NAME} {
+                        minTaskDuration.set(Duration.ofMillis(100))
+                        sortBy.set(Sort.DESC)
+                    }
+                """.trimIndent()
+            )
+        }
+
+        println(buildFile.readText())
+
+        val result = run("a", "b")
+
+        assertThat(result.task(taskName)?.outcome == SUCCESS)
+        val lines = result.output
+            .lines()
+            .filter { it.isNotEmpty() }
+        assertThat(lines).hasSizeGreaterThanOrEqualTo(4)
+        assertThat(lines[0]).isEqualTo("> Task :a")
+        assertThat(lines[1]).isEqualTo("Hello, World!")
+        assertThat(lines[2]).isEqualTo("> Task :b")
+        assertThat(lines[3]).isEqualTo("Hi there!")
+        assertThat(lines[4]).isEqualTo("== Build time summary ==")
+        assertThat(lines[5]).isEqualTo(":b | 2S | 67% | ${Printer.BLOCK_CHAR.toString().repeat(2)}")
+        assertThat(lines[6]).isEqualTo(":a | 1S | 33% | ${Printer.BLOCK_CHAR}")
+    }
+
+    @Test
+    fun testSortByAsc() {
+        newBuildFile("build.gradle.kts")
+        Files.newBufferedWriter(buildFile, APPEND).use {
+            it.write(
+                """
+                    tasks.register("a") {
+                        doLast {
+                            Thread.sleep(1100)
+                            println("Hello, World!")
+                        }
+                    }
+                    tasks.register("b") {
+                        doLast {
+                            Thread.sleep(2100)
+                            println("Hi there!")
+                        }
+                    }
+                    ${Constants.PLUGIN_EXTENSION_NAME} {
+                        minTaskDuration.set(Duration.ofMillis(100))
+                        sortBy.set(Sort.ASC)
+                    }
+                """.trimIndent()
+            )
+        }
+
+        println(buildFile.readText())
+
+        val result = run("a", "b")
+
+        assertThat(result.task(taskName)?.outcome == SUCCESS)
+        val lines = result.output
+            .lines()
+            .filter { it.isNotEmpty() }
+        assertThat(lines).hasSizeGreaterThanOrEqualTo(4)
+        assertThat(lines[0]).isEqualTo("> Task :a")
+        assertThat(lines[1]).isEqualTo("Hello, World!")
+        assertThat(lines[2]).isEqualTo("> Task :b")
+        assertThat(lines[3]).isEqualTo("Hi there!")
+        assertThat(lines[4]).isEqualTo("== Build time summary ==")
+        assertThat(lines[5]).isEqualTo(":a | 1S | 33% | ${Printer.BLOCK_CHAR}")
+        assertThat(lines[6]).isEqualTo(":b | 2S | 67% | ${Printer.BLOCK_CHAR.toString().repeat(2)}")
+    }
+
+    private fun run(vararg tasks: String): BuildResult {
         return GradleRunner.create()
             .withProjectDir(testProjectDir.toFile())
-            .withArguments(taskName, "--warning-mode=all", "--stacktrace")
+            .withArguments(*tasks, "--warning-mode=all", "--stacktrace")
             .withPluginClasspath()
             .withDebug(false)
             .forwardOutput()

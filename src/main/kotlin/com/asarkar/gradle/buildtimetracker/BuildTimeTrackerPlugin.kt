@@ -30,7 +30,7 @@ class BuildTimeTrackerPlugin @Inject constructor(private val registry: BuildEven
 
     private fun copyParams(src: BuildTimeTrackerPluginExtension, dest: BuildTimeTrackerPluginParams) {
         dest.barPosition = src.barPosition.get()
-        dest.sort = src.sort.get()
+        dest.sortBy = if (src.sort.get()) Sort.DESC else src.sortBy.get()
         dest.output = src.output.get()
         dest.maxWidth = src.maxWidth.get()
         dest.minTaskDuration = src.minTaskDuration.get()
