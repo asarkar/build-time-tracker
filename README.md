@@ -29,7 +29,7 @@ buildTimeTracker {
     sortBy = Sort.ASC, Sort.DESC, or Sort.NONE, default is NONE
     output = Output.CONSOLE or Output.CSV, default is CONSOLE
     maxWidth = 120, default is 80
-    minTaskDuration = Duration.ofSeconds(1), don't show tasks that take less than a second to execute
+    minTaskDuration = Duration.ofSeconds(1), don't show tasks that take less than a second
     showBars = false or true, default is true
     reportsDir = only relevant if output = CSV, default $buildDir/reports/buildTimeTracker
 }
