@@ -61,7 +61,7 @@ is one way.
 - Java 11
 - Gradle 6.1
 
-## Contribution
+## Contributing
 
 This project is a volunteer effort. You are welcome to send pull requests, 
 [ask questions](https://github.com/asarkar/build-time-tracker/discussions),
