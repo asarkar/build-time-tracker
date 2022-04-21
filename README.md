@@ -4,7 +4,7 @@ Gradle plugin that prints the time taken by the tasks in a build. If you like it
 [![](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86)](https://github.com/sponsors/asarkar).
 
 [![](https://github.com/asarkar/build-time-tracker/workflows/CI%20Pipeline/badge.svg)](https://github.com/asarkar/build-time-tracker/actions?query=workflow%3A%22CI+Pipeline%22)
-[![codecov](https://codecov.io/gh/asarkar/build-time-tracker/branch/master/graph/badge.svg?token=X0EXE4L00N)](https://codecov.io/gh/asarkar/build-time-tracker)
+[![](https://codecov.io/gh/asarkar/build-time-tracker/branch/master/graph/badge.svg?token=X0EXE4L00N)](https://codecov.io/gh/asarkar/build-time-tracker)
 ```
 == Build time summary ==
  :commons:extractIncludeProto | 4S | 14% | ████
