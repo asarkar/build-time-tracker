@@ -18,6 +18,8 @@ import java.nio.file.Path
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.readLines
 
+// test
+
 private class PrinterWrapper(val output: Output) {
     private val out = ByteArrayOutputStream()
     val delegate = when (output) {
