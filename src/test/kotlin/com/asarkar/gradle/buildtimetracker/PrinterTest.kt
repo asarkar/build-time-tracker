@@ -3,7 +3,7 @@ package com.asarkar.gradle.buildtimetracker
 import com.asarkar.gradle.buildtimetracker.Printer.Companion.BLOCK_CHAR
 import com.asarkar.gradle.buildtimetracker.Printer.Companion.format
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertTrue
+import org.gradle.internal.impldep.junit.framework.TestCase.assertTrue
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
@@ -259,7 +259,7 @@ class PrinterTest {
                 }
         }
     }
-    
+
     @Test
     fun testX() {
         assertTrue(true)
