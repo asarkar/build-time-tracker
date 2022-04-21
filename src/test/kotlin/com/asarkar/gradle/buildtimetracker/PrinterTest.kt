@@ -3,6 +3,7 @@ package com.asarkar.gradle.buildtimetracker
 import com.asarkar.gradle.buildtimetracker.Printer.Companion.BLOCK_CHAR
 import com.asarkar.gradle.buildtimetracker.Printer.Companion.format
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertTrue
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
@@ -18,7 +19,6 @@ import java.nio.file.Path
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.readLines
 
-// test
 
 private class PrinterWrapper(val output: Output) {
     private val out = ByteArrayOutputStream()
@@ -259,6 +259,11 @@ class PrinterTest {
                     assertThat(it.value.startsWith(taskDurations[it.index].first) && it.value.endsWith(BLOCK_CHAR))
                 }
         }
+    }
+    
+    @Test
+    fun testX() {
+        assertTrue(true);
     }
 
     companion object {
