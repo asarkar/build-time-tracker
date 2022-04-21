@@ -40,6 +40,5 @@ jobs:
         uses: codecov/codecov-action@v2
         with:
           directory: build/reports/jacoco/test
-          flags: functional
           dry_run: false
           verbose: false
