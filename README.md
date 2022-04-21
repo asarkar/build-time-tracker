@@ -10,7 +10,7 @@ Gradle plugin that prints the time taken by the tasks in a build. If you like it
  :commons:extractIncludeProto | 4S | 14% | ████
        :commons:compileKotlin | 2S |  7% | ██
          :commons:compileJava | 6S | 21% | ██████
-:service-client:compileKotlin | 1S |  4% | █
+       :service:compileKotlin | 1S |  4% | █
         :webapp:compileKotlin | 1S |  4% | █
      :webapp:dockerBuildImage | 4S | 14% | ████
       :webapp:dockerPushImage | 4S | 14% | ████
