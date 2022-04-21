@@ -4,6 +4,7 @@ plugins {
     id("org.jlleitschuh.gradle.ktlint")
     id("com.gradle.plugin-publish")
     `maven-publish`
+    jacoco
 }
 
 val pluginWebsite: String by project
@@ -84,4 +85,12 @@ publishing {
 
 tasks.wrapper {
     distributionType = Wrapper.DistributionType.BIN
+}
+
+tasks.jacocoTestReport {
+    reports {
+        xml.required.set(true)
+        csv.required.set(false)
+        html.required.set(false)
+    }
 }
