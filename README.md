@@ -37,7 +37,7 @@ buildTimeTracker {
 
 > If you are using Kotlin build script, set the configuration properties using `property.set()` method.
 
-> `BarPosition`, `Sort`, and `Output` are enums, so, they need to be imported or fully-qualified.
+> `BarPosition`, `Sort`, and `Output` are enums, so, they need to be imported or fully-qualified with `com.asarkar.gradle.buildtimetracker`.
 
 :information_source: Due to a
 [Gradle limitation](https://docs.gradle.org/6.5.1/userguide/upgrading_version_5.html#apis_buildlistener_buildstarted_and_gradle_buildstarted_have_been_deprecated)
