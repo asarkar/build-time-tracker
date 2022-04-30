@@ -19,7 +19,7 @@ Gradle plugin that prints the time taken by the tasks in a build. If you like it
 See [Gradle Plugin Portal](https://plugins.gradle.org/plugin/com.asarkar.gradle.build-time-tracker) for usage
 instructions.
 
-If you are the fiddling type, you can customize the plugin as follows:
+You can customize the plugin as follows:
 
 ```
 buildTimeTracker {
