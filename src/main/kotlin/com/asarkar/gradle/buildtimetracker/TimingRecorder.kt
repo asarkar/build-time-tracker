@@ -10,6 +10,7 @@ import org.gradle.tooling.events.task.TaskFinishEvent
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.atomic.AtomicReference
 
 @Suppress("UnstableApiUsage")
 abstract class TimingRecorder : BuildService<TimingRecorder.Params>, OperationCompletionListener, AutoCloseable {
@@ -25,13 +26,13 @@ abstract class TimingRecorder : BuildService<TimingRecorder.Params>, OperationCo
     }
 
     private val taskDurations: MutableCollection<Pair<String, Long>> = ConcurrentLinkedQueue()
-    private var buildStarted: Instant = Instant.EPOCH
+    private val buildStart = AtomicReference(Instant.EPOCH)
 
     override fun onFinish(event: FinishEvent) {
         if (event is TaskFinishEvent) {
             val eventStart = Instant.ofEpochMilli(event.result.startTime)
-            if (buildStarted == Instant.EPOCH || eventStart.isBefore(buildStarted)) {
-                buildStarted = eventStart
+            buildStart.accumulateAndGet(eventStart) { curr, newVal ->
+                if (curr == Instant.EPOCH || newVal.isBefore(curr)) newVal else curr
             }
             val duration = Duration.ofMillis(event.result.endTime - event.result.startTime).seconds
             if (duration >= parameters.minTaskDuration.get().seconds) {
@@ -45,7 +46,7 @@ abstract class TimingRecorder : BuildService<TimingRecorder.Params>, OperationCo
             return
         }
 
-        val buildDuration = Duration.between(buildStarted, Instant.now()).seconds
+        val buildDuration = Duration.between(buildStart.get(), Instant.now()).seconds
         Printer.newInstance(parameters.output.get(), parameters.reportsDir.get().asFile)
             .use { printer ->
                 val sort: Sort = if (parameters.sort.get()) Sort.DESC else parameters.sortBy.get()

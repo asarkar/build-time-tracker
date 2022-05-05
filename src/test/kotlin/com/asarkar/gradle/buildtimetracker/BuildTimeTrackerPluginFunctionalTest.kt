@@ -317,6 +317,53 @@ class BuildTimeTrackerPluginFunctionalTest {
     }
 
     @RepeatedTest(3)
+    fun testConfigurationCache(repetitionInfo: RepetitionInfo) {
+        newBuildFile("build.gradle.kts", sharedTestProjectDir)
+        Files.newBufferedWriter(buildFile, APPEND).use {
+            it.write(
+                """
+                    tasks.register("a") {
+                        doLast {
+                            Thread.sleep(1100)
+                            println("Hello, World!")
+                        }
+                    }
+                    tasks.register("b") {
+                        doLast {
+                            Thread.sleep(2100)
+                            println("Hi there!")
+                        }
+                    }
+                    ${Constants.PLUGIN_EXTENSION_NAME} {
+                        minTaskDuration.set(Duration.ofMillis(100))
+                    }
+                """.trimIndent()
+            )
+        }
+
+        println(buildFile.readText())
+
+        val result = run(sharedTestProjectDir, "-q", "--configuration-cache", "a", "b")
+
+        assertThat(result.task(taskName)?.outcome == SUCCESS)
+        val lines = result.output
+            .lines()
+            .filter { it.isNotEmpty() }
+        assertThat(lines).hasSizeGreaterThanOrEqualTo(4)
+        assertThat(lines[0]).isEqualTo("Hello, World!")
+        assertThat(lines[1]).isEqualTo("Hi there!")
+        assertThat(lines[2]).isEqualTo("== Build time summary ==")
+        if (repetitionInfo.currentRepetition == 1) {
+            assertThat(lines[3]).isEqualTo(":a | 1S | 33% | ${Printer.BLOCK_CHAR}")
+            assertThat(lines[4]).isEqualTo(":b | 2S | 67% | ${Printer.BLOCK_CHAR.toString().repeat(2)}")
+        } else {
+            // https://github.com/asarkar/build-time-tracker/discussions/45
+            assertThat(lines[3]).isEqualTo(":a | 1S |  50% | ${Printer.BLOCK_CHAR}")
+            assertThat(lines[4]).isEqualTo(":b | 2S | 100% | ${Printer.BLOCK_CHAR.toString().repeat(2)}")
+        }
+    }
+
+    @RepeatedTest(3)
     fun testSortDescAndConfigurationCache(repetitionInfo: RepetitionInfo) {
         newBuildFile("build.gradle.kts", sharedTestProjectDir)
         Files.newBufferedWriter(buildFile, APPEND).use {
@@ -362,54 +409,6 @@ class BuildTimeTrackerPluginFunctionalTest {
             // https://github.com/asarkar/build-time-tracker/discussions/45
             assertThat(lines[3]).isEqualTo(":b | 2S | 100% | ${Printer.BLOCK_CHAR.toString().repeat(2)}")
             assertThat(lines[4]).isEqualTo(":a | 1S |  50% | ${Printer.BLOCK_CHAR}")
-        }
-    }
-
-    @RepeatedTest(3)
-    fun testSortAscAndConfigurationCache(repetitionInfo: RepetitionInfo) {
-        newBuildFile("build.gradle.kts", sharedTestProjectDir)
-        Files.newBufferedWriter(buildFile, APPEND).use {
-            it.write(
-                """
-                    tasks.register("a") {
-                        doLast {
-                            Thread.sleep(1100)
-                            println("Hello, World!")
-                        }
-                    }
-                    tasks.register("b") {
-                        doLast {
-                            Thread.sleep(2100)
-                            println("Hi there!")
-                        }
-                    }
-                    ${Constants.PLUGIN_EXTENSION_NAME} {
-                        minTaskDuration.set(Duration.ofMillis(100))
-                        sortBy.set(Sort.ASC)
-                    }
-                """.trimIndent()
-            )
-        }
-
-        println(buildFile.readText())
-
-        val result = run(sharedTestProjectDir, "-q", "--configuration-cache", "a", "b")
-
-        assertThat(result.task(taskName)?.outcome == SUCCESS)
-        val lines = result.output
-            .lines()
-            .filter { it.isNotEmpty() }
-        assertThat(lines).hasSizeGreaterThanOrEqualTo(4)
-        assertThat(lines[0]).isEqualTo("Hello, World!")
-        assertThat(lines[1]).isEqualTo("Hi there!")
-        assertThat(lines[2]).isEqualTo("== Build time summary ==")
-        if (repetitionInfo.currentRepetition == 1) {
-            assertThat(lines[3]).isEqualTo(":a | 1S | 33% | ${Printer.BLOCK_CHAR}")
-            assertThat(lines[4]).isEqualTo(":b | 2S | 67% | ${Printer.BLOCK_CHAR.toString().repeat(2)}")
-        } else {
-            // https://github.com/asarkar/build-time-tracker/discussions/45
-            assertThat(lines[3]).isEqualTo(":a | 1S |  50% | ${Printer.BLOCK_CHAR}")
-            assertThat(lines[4]).isEqualTo(":b | 2S | 100% | ${Printer.BLOCK_CHAR.toString().repeat(2)}")
         }
     }
 
