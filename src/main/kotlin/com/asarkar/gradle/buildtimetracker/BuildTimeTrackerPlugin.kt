@@ -17,24 +17,18 @@ class BuildTimeTrackerPlugin @Inject constructor(private val registry: BuildEven
         val clazz = TimingRecorder::class.java
         val timingRecorder =
             project.gradle.sharedServices.registerIfAbsent(clazz.simpleName, clazz) { spec ->
-                val params = BuildTimeTrackerPluginParams(ext.reportsDir.get().asFile)
-                spec.parameters.getParams().set(params)
+                with(spec.parameters) {
+                    barPosition.set(ext.barPosition)
+                    sort.set(ext.sort)
+                    sortBy.set(ext.sortBy)
+                    output.set(ext.output)
+                    maxWidth.set(ext.maxWidth)
+                    minTaskDuration.set(ext.minTaskDuration)
+                    showBars.set(ext.showBars)
+                    reportsDir.set(ext.reportsDir)
+                }
             }
 
-        project.gradle.projectsEvaluated {
-            copyParams(ext, timingRecorder.get().parameters.getParams().get())
-        }
-
         registry.onTaskCompletion(timingRecorder)
-    }
-
-    private fun copyParams(src: BuildTimeTrackerPluginExtension, dest: BuildTimeTrackerPluginParams) {
-        dest.barPosition = src.barPosition.get()
-        dest.sortBy = if (src.sort.get()) Sort.DESC else src.sortBy.get()
-        dest.output = src.output.get()
-        dest.maxWidth = src.maxWidth.get()
-        dest.minTaskDuration = src.minTaskDuration.get()
-        dest.showBars = src.showBars.get()
-        dest.reportsDir = src.reportsDir.get().asFile
     }
 }
