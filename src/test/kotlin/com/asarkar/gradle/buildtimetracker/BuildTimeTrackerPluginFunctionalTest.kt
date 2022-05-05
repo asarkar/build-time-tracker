@@ -484,11 +484,7 @@ class BuildTimeTrackerPluginFunctionalTest {
 
         val settingsFile = testProjectDir.resolve("settings.gradle")
         Files.newBufferedWriter(settingsFile, CREATE, WRITE, TRUNCATE_EXISTING).use {
-            it.write(
-                """
-                include ":lib1", ":lib2"
-                """.trimIndent()
-            )
+            it.write("""include ":lib1", ":lib2"""")
         }
 
         println(settingsFile.readText())

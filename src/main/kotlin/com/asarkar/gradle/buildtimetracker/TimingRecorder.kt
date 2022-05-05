@@ -32,7 +32,7 @@ abstract class TimingRecorder : BuildService<TimingRecorder.Params>, OperationCo
         if (event is TaskFinishEvent) {
             val eventStart = Instant.ofEpochMilli(event.result.startTime)
             buildStart.accumulateAndGet(eventStart) { curr, newVal ->
-                if (curr == Instant.EPOCH || newVal.isBefore(curr)) newVal else curr
+                if (curr == Instant.EPOCH) newVal else minOf(curr, newVal)
             }
             val duration = Duration.ofMillis(event.result.endTime - event.result.startTime).seconds
             if (duration >= parameters.minTaskDuration.get().seconds) {
