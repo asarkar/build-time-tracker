@@ -74,11 +74,13 @@ class BuildTimeTrackerPluginFunctionalTest {
         val text = file.fileName.toString() + (if (start) " start" else " end")
         val n = 80 - text.length
         val k = n / 2
-        println(buildString {
-            append("-".repeat(k))
-            append(text)
-            append("-".repeat(n - k))
-        })
+        println(
+            buildString {
+                append("-".repeat(k))
+                append(text)
+                append("-".repeat(n - k))
+            }
+        )
     }
 
     private fun Path.append(content: String) {
