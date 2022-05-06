@@ -241,7 +241,7 @@ class BuildTimeTrackerPluginFunctionalTest {
         val lines = result.output
             .lines()
             .filter { it.isNotEmpty() }
-        assertThat(lines).hasSizeGreaterThanOrEqualTo(4)
+        assertThat(lines).hasSizeGreaterThanOrEqualTo(7)
         assertThat(lines[0]).isEqualTo("> Task :a")
         assertThat(lines[1]).isEqualTo("Hello, World!")
         assertThat(lines[2]).isEqualTo("> Task :b")
@@ -286,7 +286,7 @@ class BuildTimeTrackerPluginFunctionalTest {
         val lines = result.output
             .lines()
             .filter { it.isNotEmpty() }
-        assertThat(lines).hasSizeGreaterThanOrEqualTo(4)
+        assertThat(lines).hasSizeGreaterThanOrEqualTo(7)
         assertThat(lines[0]).isEqualTo("> Task :a")
         assertThat(lines[1]).isEqualTo("Hello, World!")
         assertThat(lines[2]).isEqualTo("> Task :b")
@@ -331,7 +331,7 @@ class BuildTimeTrackerPluginFunctionalTest {
         val lines = result.output
             .lines()
             .filter { it.isNotEmpty() }
-        assertThat(lines).hasSizeGreaterThanOrEqualTo(4)
+        assertThat(lines).hasSizeGreaterThanOrEqualTo(7)
         assertThat(lines[0]).isEqualTo("> Task :a")
         assertThat(lines[1]).isEqualTo("Hello, World!")
         assertThat(lines[2]).isEqualTo("> Task :b")
@@ -375,7 +375,7 @@ class BuildTimeTrackerPluginFunctionalTest {
         val lines = result.output
             .lines()
             .filter { it.isNotEmpty() }
-        assertThat(lines).hasSizeGreaterThanOrEqualTo(4)
+        assertThat(lines).hasSizeGreaterThanOrEqualTo(5)
         assertThat(lines[0]).isEqualTo("Hello, World!")
         assertThat(lines[1]).isEqualTo("Hi there!")
         assertThat(lines[2]).isEqualTo("== Build time summary ==")
@@ -424,7 +424,7 @@ class BuildTimeTrackerPluginFunctionalTest {
         val lines = result.output
             .lines()
             .filter { it.isNotEmpty() }
-        assertThat(lines).hasSizeGreaterThanOrEqualTo(4)
+        assertThat(lines).hasSizeGreaterThanOrEqualTo(5)
         assertThat(lines[0]).isEqualTo("Hello, World!")
         assertThat(lines[1]).isEqualTo("Hi there!")
         assertThat(lines[2]).isEqualTo("== Build time summary ==")
@@ -495,7 +495,7 @@ class BuildTimeTrackerPluginFunctionalTest {
         val lines = result.output
             .lines()
             .filter { it.isNotEmpty() }
-        assertThat(lines).hasSizeGreaterThanOrEqualTo(4)
+        assertThat(lines).hasSizeGreaterThanOrEqualTo(7)
         assertThat(lines[0]).isEqualTo("> Task :lib1:a")
         assertThat(lines[1]).isEqualTo("Hello, World!")
         assertThat(lines[2]).isEqualTo("> Task :lib2:b")
