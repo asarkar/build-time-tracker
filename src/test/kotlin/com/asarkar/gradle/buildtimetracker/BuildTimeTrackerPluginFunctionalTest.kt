@@ -70,12 +70,19 @@ class BuildTimeTrackerPluginFunctionalTest {
         return buildFile
     }
 
+    private fun Path.append(content: String) {
+        Files.newBufferedWriter(this, APPEND).use {
+            it.write(content.trimIndent())
+        }
+
+        println(this.readText())
+    }
+
     @Test
     fun testConsoleOutputKotlin() {
         val buildFile = newBuildFile(testProjectDir, "build.gradle.kts")
-        Files.newBufferedWriter(buildFile, APPEND).use {
-            it.write(
-                """
+        buildFile.append(
+            """
                 tasks.register("$taskName") {
                     doLast {
                         Thread.sleep(200)
@@ -86,27 +93,23 @@ class BuildTimeTrackerPluginFunctionalTest {
                 ${Constants.PLUGIN_EXTENSION_NAME} {
                     minTaskDuration.set(Duration.ofMillis(100))
                 }
-                """.trimIndent()
-            )
-        }
-
-        println(buildFile.readText())
+                """
+        )
 
         val result = run(testProjectDir, taskName)
 
         assertThat(result.task(taskName)?.outcome == SUCCESS)
         val lastLine = result.output
             .lines()
-            .last { it.isNotEmpty() }
+            .lastOrNull { it.isNotEmpty() }
         assertThat(lastLine).isEqualTo(":$taskName | 0S | 0% | ")
     }
 
     @Test
     fun testConsoleOutputGroovy() {
         val buildFile = newBuildFile(testProjectDir, "build.gradle")
-        Files.newBufferedWriter(buildFile, APPEND).use {
-            it.write(
-                """
+        buildFile.append(
+            """
                 tasks.register("$taskName") {
                     doLast {
                         Thread.sleep(200)
@@ -117,27 +120,23 @@ class BuildTimeTrackerPluginFunctionalTest {
                 ${Constants.PLUGIN_EXTENSION_NAME} {
                     minTaskDuration = Duration.ofMillis(100)
                 }
-                """.trimIndent()
-            )
-        }
-
-        println(buildFile.readText())
+                """
+        )
 
         val result = run(testProjectDir, taskName)
 
         assertThat(result.task(taskName)?.outcome == SUCCESS)
         val lastLine = result.output
             .lines()
-            .last { it.isNotEmpty() }
+            .lastOrNull { it.isNotEmpty() }
         assertThat(lastLine).isEqualTo(":$taskName | 0S | 0% | ")
     }
 
     @Test
     fun testCsvOutputKotlin() {
         val buildFile = newBuildFile(testProjectDir, "build.gradle.kts")
-        Files.newBufferedWriter(buildFile, APPEND).use {
-            it.write(
-                """
+        buildFile.append(
+            """
                 tasks.register("$taskName") {
                     doLast {
                         Thread.sleep(200)
@@ -150,11 +149,8 @@ class BuildTimeTrackerPluginFunctionalTest {
                     output.set(Output.CSV)
                     reportsDir.set(file("${testProjectDir.absolutePathString()}"))
                 }
-                """.trimIndent()
-            )
-        }
-
-        println(buildFile.readText())
+                """
+        )
 
         val result = run(testProjectDir, taskName)
         val csvFile = testProjectDir.resolve(Constants.CSV_FILENAME)
@@ -168,9 +164,8 @@ class BuildTimeTrackerPluginFunctionalTest {
     @Test
     fun testCsvOutputGroovy() {
         val buildFile = newBuildFile(testProjectDir, "build.gradle")
-        Files.newBufferedWriter(buildFile, APPEND).use {
-            it.write(
-                """
+        buildFile.append(
+            """
                 tasks.register("$taskName") {
                     doLast {
                         Thread.sleep(200)
@@ -183,11 +178,8 @@ class BuildTimeTrackerPluginFunctionalTest {
                     output = Output.CSV
                     reportsDir = file("${testProjectDir.absolutePathString()}")
                 }
-                """.trimIndent()
-            )
-        }
-
-        println(buildFile.readText())
+                """
+        )
 
         val result = run(testProjectDir, taskName)
         val csvFile = testProjectDir.resolve(Constants.CSV_FILENAME)
@@ -201,9 +193,8 @@ class BuildTimeTrackerPluginFunctionalTest {
     @Test
     fun testSort() {
         val buildFile = newBuildFile(testProjectDir, "build.gradle.kts")
-        Files.newBufferedWriter(buildFile, APPEND).use {
-            it.write(
-                """
+        buildFile.append(
+            """
                 tasks.register("a") {
                     doLast {
                         Thread.sleep(1100)
@@ -221,11 +212,8 @@ class BuildTimeTrackerPluginFunctionalTest {
                     minTaskDuration.set(Duration.ofMillis(100))
                     sort.set(true)
                 }
-                """.trimIndent()
-            )
-        }
-
-        println(buildFile.readText())
+                """
+        )
 
         val result = run(testProjectDir, "a", "b")
 
@@ -244,9 +232,8 @@ class BuildTimeTrackerPluginFunctionalTest {
     @Test
     fun testSortByDesc() {
         val buildFile = newBuildFile(testProjectDir, "build.gradle.kts")
-        Files.newBufferedWriter(buildFile, APPEND).use {
-            it.write(
-                """
+        buildFile.append(
+            """
                 tasks.register("a") {
                     doLast {
                         Thread.sleep(1100)
@@ -264,11 +251,8 @@ class BuildTimeTrackerPluginFunctionalTest {
                     minTaskDuration.set(Duration.ofMillis(100))
                     sortBy.set(Sort.DESC)
                 }
-                """.trimIndent()
-            )
-        }
-
-        println(buildFile.readText())
+                """
+        )
 
         val result = run(testProjectDir, "a", "b")
 
@@ -287,9 +271,8 @@ class BuildTimeTrackerPluginFunctionalTest {
     @Test
     fun testSortByAsc() {
         val buildFile = newBuildFile(testProjectDir, "build.gradle.kts")
-        Files.newBufferedWriter(buildFile, APPEND).use {
-            it.write(
-                """
+        buildFile.append(
+            """
                 tasks.register("a") {
                     doLast {
                         Thread.sleep(1100)
@@ -307,11 +290,8 @@ class BuildTimeTrackerPluginFunctionalTest {
                     minTaskDuration.set(Duration.ofMillis(100))
                     sortBy.set(Sort.ASC)
                 }
-                """.trimIndent()
-            )
-        }
-
-        println(buildFile.readText())
+                """
+        )
 
         val result = run(testProjectDir, "a", "b")
 
@@ -330,9 +310,8 @@ class BuildTimeTrackerPluginFunctionalTest {
     @RepeatedTest(3)
     fun testConfigurationCache(repetitionInfo: RepetitionInfo) {
         val buildFile = newBuildFile(sharedTestProjectDir, "build.gradle.kts")
-        Files.newBufferedWriter(buildFile, APPEND).use {
-            it.write(
-                """
+        buildFile.append(
+            """
                 tasks.register("a") {
                     doLast {
                         Thread.sleep(1100)
@@ -349,11 +328,8 @@ class BuildTimeTrackerPluginFunctionalTest {
                 ${Constants.PLUGIN_EXTENSION_NAME} {
                     minTaskDuration.set(Duration.ofMillis(100))
                 }
-                """.trimIndent()
-            )
-        }
-
-        println(buildFile.readText())
+                """
+        )
 
         val result = run(sharedTestProjectDir, "--configuration-cache", "a", "b")
 
@@ -381,9 +357,8 @@ class BuildTimeTrackerPluginFunctionalTest {
     @RepeatedTest(3)
     fun testSortDescAndConfigurationCache(repetitionInfo: RepetitionInfo) {
         val buildFile = newBuildFile(sharedTestProjectDir, "build.gradle.kts")
-        Files.newBufferedWriter(buildFile, APPEND).use {
-            it.write(
-                """
+        buildFile.append(
+            """
                 tasks.register("a") {
                     doLast {
                         Thread.sleep(1100)
@@ -401,11 +376,8 @@ class BuildTimeTrackerPluginFunctionalTest {
                     minTaskDuration.set(Duration.ofMillis(100))
                     sortBy.set(Sort.DESC)
                 }
-                """.trimIndent()
-            )
-        }
-
-        println(buildFile.readText())
+                """
+        )
 
         val result = run(sharedTestProjectDir, "--configuration-cache", "a", "b")
 
@@ -433,9 +405,8 @@ class BuildTimeTrackerPluginFunctionalTest {
     @Test
     fun testParallelBuild() {
         val buildFileLib1 = newBuildFile(testProjectDir.resolve("lib1"), "build.gradle.kts")
-        Files.newBufferedWriter(buildFileLib1, APPEND).use {
-            it.write(
-                """
+        buildFileLib1.append(
+            """
                 tasks.register("a") {
                     doLast {
                         Thread.sleep(1100)
@@ -446,17 +417,14 @@ class BuildTimeTrackerPluginFunctionalTest {
                 ${Constants.PLUGIN_EXTENSION_NAME} {
                     minTaskDuration.set(Duration.ofMillis(100))
                 }
-                """.trimIndent()
-            )
-        }
+                """
+        )
 
-        println(buildFileLib1.readText())
         println("-".repeat(80))
 
         val buildFileLib2 = newBuildFile(testProjectDir.resolve("lib2"), "build.gradle.kts")
-        Files.newBufferedWriter(buildFileLib2, APPEND).use {
-            it.write(
-                """
+        buildFileLib2.append(
+            """
                 tasks.register("b") {
                     doLast {
                         Thread.sleep(2100)
@@ -467,11 +435,8 @@ class BuildTimeTrackerPluginFunctionalTest {
                 ${Constants.PLUGIN_EXTENSION_NAME} {
                     minTaskDuration.set(Duration.ofMillis(100))
                 }
-                """.trimIndent()
-            )
-        }
-
-        println(buildFileLib2.readText())
+                """
+        )
         println("-".repeat(80))
 
         val settingsFile = testProjectDir.resolve("settings.gradle")
