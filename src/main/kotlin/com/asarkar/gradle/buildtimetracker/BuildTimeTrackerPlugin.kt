@@ -14,21 +14,23 @@ class BuildTimeTrackerPlugin @Inject constructor(private val registry: BuildEven
         val ext = project.extensions.create(
             PLUGIN_EXTENSION_NAME, BuildTimeTrackerPluginExtension::class.java, project
         )
-        val clazz = TimingRecorder::class.java
-        val timingRecorder =
-            project.gradle.sharedServices.registerIfAbsent(clazz.simpleName, clazz) { spec ->
-                with(spec.parameters) {
-                    barPosition.set(ext.barPosition)
-                    sort.set(ext.sort)
-                    sortBy.set(ext.sortBy)
-                    output.set(ext.output)
-                    maxWidth.set(ext.maxWidth)
-                    minTaskDuration.set(ext.minTaskDuration)
-                    showBars.set(ext.showBars)
-                    reportsDir.set(ext.reportsDir)
+        project.gradle.taskGraph.whenReady {
+            val clazz = TimingRecorder::class.java
+            val timingRecorder =
+                project.gradle.sharedServices.registerIfAbsent(clazz.simpleName, clazz) { spec ->
+                    with(spec.parameters) {
+                        barPosition.set(ext.barPosition)
+                        sort.set(ext.sort)
+                        sortBy.set(ext.sortBy)
+                        output.set(ext.output)
+                        maxWidth.set(ext.maxWidth)
+                        minTaskDuration.set(ext.minTaskDuration)
+                        showBars.set(ext.showBars)
+                        reportsDir.set(ext.reportsDir)
+                    }
                 }
-            }
 
-        registry.onTaskCompletion(timingRecorder)
+            registry.onTaskCompletion(timingRecorder)
+        }
     }
 }
