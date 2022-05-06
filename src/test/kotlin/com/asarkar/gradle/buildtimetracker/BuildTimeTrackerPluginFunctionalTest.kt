@@ -95,14 +95,10 @@ class BuildTimeTrackerPluginFunctionalTest {
         val result = run(testProjectDir, taskName)
 
         assertThat(result.task(taskName)?.outcome == SUCCESS)
-        val lines = result.output
+        val lastLine = result.output
             .lines()
-            .filter { it.isNotEmpty() }
-        assertThat(lines).hasSizeGreaterThanOrEqualTo(4)
-        assertThat(lines[0]).isEqualTo("> Task :$taskName")
-        assertThat(lines[1]).isEqualTo("Hello, World!")
-        assertThat(lines[2]).isEqualTo("== Build time summary ==")
-        assertThat(lines[3]).isEqualTo(":$taskName | 0S | 0% | ")
+            .last { it.isNotEmpty() }
+        assertThat(lastLine).isEqualTo(":$taskName | 0S | 0% | ")
     }
 
     @Test
@@ -130,14 +126,10 @@ class BuildTimeTrackerPluginFunctionalTest {
         val result = run(testProjectDir, taskName)
 
         assertThat(result.task(taskName)?.outcome == SUCCESS)
-        val lines = result.output
+        val lastLine = result.output
             .lines()
-            .filter { it.isNotEmpty() }
-        assertThat(lines).hasSizeGreaterThanOrEqualTo(4)
-        assertThat(lines[0]).isEqualTo("> Task :$taskName")
-        assertThat(lines[1]).isEqualTo("Hello, World!")
-        assertThat(lines[2]).isEqualTo("== Build time summary ==")
-        assertThat(lines[3]).isEqualTo(":$taskName | 0S | 0% | ")
+            .last { it.isNotEmpty() }
+        assertThat(lastLine).isEqualTo(":$taskName | 0S | 0% | ")
     }
 
     @Test
@@ -241,14 +233,12 @@ class BuildTimeTrackerPluginFunctionalTest {
         val lines = result.output
             .lines()
             .filter { it.isNotEmpty() }
-        assertThat(lines).hasSizeGreaterThanOrEqualTo(7)
-        assertThat(lines[0]).isEqualTo("> Task :a")
-        assertThat(lines[1]).isEqualTo("Hello, World!")
-        assertThat(lines[2]).isEqualTo("> Task :b")
-        assertThat(lines[3]).isEqualTo("Hi there!")
-        assertThat(lines[4]).isEqualTo("== Build time summary ==")
-        assertThat(lines[5]).isEqualTo(":b | 2S | 67% | ${Printer.BLOCK_CHAR.toString().repeat(2)}")
-        assertThat(lines[6]).isEqualTo(":a | 1S | 33% | ${Printer.BLOCK_CHAR}")
+            .takeLast(2)
+        assertThat(lines)
+            .containsExactly(
+                ":b | 2S | 67% | ${Printer.BLOCK_CHAR.toString().repeat(2)}",
+                ":a | 1S | 33% | ${Printer.BLOCK_CHAR}"
+            )
     }
 
     @Test
@@ -286,14 +276,12 @@ class BuildTimeTrackerPluginFunctionalTest {
         val lines = result.output
             .lines()
             .filter { it.isNotEmpty() }
-        assertThat(lines).hasSizeGreaterThanOrEqualTo(7)
-        assertThat(lines[0]).isEqualTo("> Task :a")
-        assertThat(lines[1]).isEqualTo("Hello, World!")
-        assertThat(lines[2]).isEqualTo("> Task :b")
-        assertThat(lines[3]).isEqualTo("Hi there!")
-        assertThat(lines[4]).isEqualTo("== Build time summary ==")
-        assertThat(lines[5]).isEqualTo(":b | 2S | 67% | ${Printer.BLOCK_CHAR.toString().repeat(2)}")
-        assertThat(lines[6]).isEqualTo(":a | 1S | 33% | ${Printer.BLOCK_CHAR}")
+            .takeLast(2)
+        assertThat(lines)
+            .containsExactly(
+                ":b | 2S | 67% | ${Printer.BLOCK_CHAR.toString().repeat(2)}",
+                ":a | 1S | 33% | ${Printer.BLOCK_CHAR}"
+            )
     }
 
     @Test
@@ -331,14 +319,12 @@ class BuildTimeTrackerPluginFunctionalTest {
         val lines = result.output
             .lines()
             .filter { it.isNotEmpty() }
-        assertThat(lines).hasSizeGreaterThanOrEqualTo(7)
-        assertThat(lines[0]).isEqualTo("> Task :a")
-        assertThat(lines[1]).isEqualTo("Hello, World!")
-        assertThat(lines[2]).isEqualTo("> Task :b")
-        assertThat(lines[3]).isEqualTo("Hi there!")
-        assertThat(lines[4]).isEqualTo("== Build time summary ==")
-        assertThat(lines[5]).isEqualTo(":a | 1S | 33% | ${Printer.BLOCK_CHAR}")
-        assertThat(lines[6]).isEqualTo(":b | 2S | 67% | ${Printer.BLOCK_CHAR.toString().repeat(2)}")
+            .takeLast(2)
+        assertThat(lines)
+            .containsExactly(
+                ":a | 1S | 33% | ${Printer.BLOCK_CHAR}",
+                ":b | 2S | 67% | ${Printer.BLOCK_CHAR.toString().repeat(2)}"
+            )
     }
 
     @RepeatedTest(3)
@@ -369,23 +355,26 @@ class BuildTimeTrackerPluginFunctionalTest {
 
         println(buildFile.readText())
 
-        val result = run(sharedTestProjectDir, "-q", "--configuration-cache", "a", "b")
+        val result = run(sharedTestProjectDir, "--configuration-cache", "a", "b")
 
         assertThat(result.task(taskName)?.outcome == SUCCESS)
         val lines = result.output
             .lines()
             .filter { it.isNotEmpty() }
-        assertThat(lines).hasSizeGreaterThanOrEqualTo(5)
-        assertThat(lines[0]).isEqualTo("Hello, World!")
-        assertThat(lines[1]).isEqualTo("Hi there!")
-        assertThat(lines[2]).isEqualTo("== Build time summary ==")
+            .takeLast(2)
         if (repetitionInfo.currentRepetition == 1) {
-            assertThat(lines[3]).isEqualTo(":a | 1S | 33% | ${Printer.BLOCK_CHAR}")
-            assertThat(lines[4]).isEqualTo(":b | 2S | 67% | ${Printer.BLOCK_CHAR.toString().repeat(2)}")
+            assertThat(lines)
+                .containsExactly(
+                    ":a | 1S | 33% | ${Printer.BLOCK_CHAR}",
+                    ":b | 2S | 67% | ${Printer.BLOCK_CHAR.toString().repeat(2)}"
+                )
         } else {
             // https://github.com/asarkar/build-time-tracker/discussions/45
-            assertThat(lines[3]).isEqualTo(":a | 1S |  50% | ${Printer.BLOCK_CHAR}")
-            assertThat(lines[4]).isEqualTo(":b | 2S | 100% | ${Printer.BLOCK_CHAR.toString().repeat(2)}")
+            assertThat(lines)
+                .containsExactly(
+                    ":a | 1S |  50% | ${Printer.BLOCK_CHAR}",
+                    ":b | 2S | 100% | ${Printer.BLOCK_CHAR.toString().repeat(2)}"
+                )
         }
     }
 
@@ -418,23 +407,26 @@ class BuildTimeTrackerPluginFunctionalTest {
 
         println(buildFile.readText())
 
-        val result = run(sharedTestProjectDir, "-q", "--configuration-cache", "a", "b")
+        val result = run(sharedTestProjectDir, "--configuration-cache", "a", "b")
 
         assertThat(result.task(taskName)?.outcome == SUCCESS)
         val lines = result.output
             .lines()
             .filter { it.isNotEmpty() }
-        assertThat(lines).hasSizeGreaterThanOrEqualTo(5)
-        assertThat(lines[0]).isEqualTo("Hello, World!")
-        assertThat(lines[1]).isEqualTo("Hi there!")
-        assertThat(lines[2]).isEqualTo("== Build time summary ==")
+            .takeLast(2)
         if (repetitionInfo.currentRepetition == 1) {
-            assertThat(lines[3]).isEqualTo(":b | 2S | 67% | ${Printer.BLOCK_CHAR.toString().repeat(2)}")
-            assertThat(lines[4]).isEqualTo(":a | 1S | 33% | ${Printer.BLOCK_CHAR}")
+            assertThat(lines)
+                .containsExactly(
+                    ":b | 2S | 67% | ${Printer.BLOCK_CHAR.toString().repeat(2)}",
+                    ":a | 1S | 33% | ${Printer.BLOCK_CHAR}"
+                )
         } else {
             // https://github.com/asarkar/build-time-tracker/discussions/45
-            assertThat(lines[3]).isEqualTo(":b | 2S | 100% | ${Printer.BLOCK_CHAR.toString().repeat(2)}")
-            assertThat(lines[4]).isEqualTo(":a | 1S |  50% | ${Printer.BLOCK_CHAR}")
+            assertThat(lines)
+                .containsExactly(
+                    ":b | 2S | 100% | ${Printer.BLOCK_CHAR.toString().repeat(2)}",
+                    ":a | 1S |  50% | ${Printer.BLOCK_CHAR}"
+                )
         }
     }
 
@@ -495,20 +487,18 @@ class BuildTimeTrackerPluginFunctionalTest {
         val lines = result.output
             .lines()
             .filter { it.isNotEmpty() }
-        assertThat(lines).hasSizeGreaterThanOrEqualTo(7)
-        assertThat(lines[0]).isEqualTo("> Task :lib1:a")
-        assertThat(lines[1]).isEqualTo("Hello, World!")
-        assertThat(lines[2]).isEqualTo("> Task :lib2:b")
-        assertThat(lines[3]).isEqualTo("Hi there!")
-        assertThat(lines[4]).isEqualTo("== Build time summary ==")
-        assertThat(lines[5]).isEqualTo(":lib1:a | 1S |  50% | ${Printer.BLOCK_CHAR}")
-        assertThat(lines[6]).isEqualTo(":lib2:b | 2S | 100% | ${Printer.BLOCK_CHAR.toString().repeat(2)}")
+            .takeLast(2)
+        assertThat(lines)
+            .containsExactly(
+                ":lib1:a | 1S |  50% | ${Printer.BLOCK_CHAR}",
+                ":lib2:b | 2S | 100% | ${Printer.BLOCK_CHAR.toString().repeat(2)}"
+            )
     }
 
     private fun run(rootDir: Path, vararg args: String): BuildResult {
         return GradleRunner.create()
             .withProjectDir(rootDir.toFile())
-            .withArguments(*args, "--warning-mode=all", "--stacktrace")
+            .withArguments(*args, "-q", "--warning-mode=all", "--stacktrace")
             .withPluginClasspath()
             .withDebug(false)
             .forwardOutput()
