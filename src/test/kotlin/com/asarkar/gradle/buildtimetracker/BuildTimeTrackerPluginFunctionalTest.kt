@@ -70,12 +70,25 @@ class BuildTimeTrackerPluginFunctionalTest {
         return buildFile
     }
 
+    private fun printHorzLine(file: Path, start: Boolean) {
+        val text = file.fileName.toString() + (if (start) " start" else " end")
+        val n = 80 - text.length
+        val k = n / 2
+        println(buildString {
+            append("-".repeat(k))
+            append(text)
+            append("-".repeat(n - k))
+        })
+    }
+
     private fun Path.append(content: String) {
         Files.newBufferedWriter(this, APPEND).use {
             it.write(content.trimIndent())
         }
 
+        printHorzLine(this, true)
         println(this.readText())
+        printHorzLine(this, false)
     }
 
     @Test
@@ -420,8 +433,6 @@ class BuildTimeTrackerPluginFunctionalTest {
                 """
         )
 
-        println("-".repeat(80))
-
         val buildFileLib2 = newBuildFile(testProjectDir.resolve("lib2"), "build.gradle.kts")
         buildFileLib2.append(
             """
@@ -437,14 +448,15 @@ class BuildTimeTrackerPluginFunctionalTest {
                 }
                 """
         )
-        println("-".repeat(80))
 
         val settingsFile = testProjectDir.resolve("settings.gradle")
         Files.newBufferedWriter(settingsFile, CREATE, WRITE, TRUNCATE_EXISTING).use {
             it.write("""include ":lib1", ":lib2"""")
         }
 
+        printHorzLine(settingsFile, true)
         println(settingsFile.readText())
+        printHorzLine(settingsFile, false)
 
         val result = run(testProjectDir, "--parallel", "a", "b")
 
