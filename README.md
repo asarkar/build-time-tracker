@@ -39,12 +39,9 @@ buildTimeTracker {
 
 > `BarPosition`, `Sort`, and `Output` are enums, so, they need to be imported or fully-qualified with `com.asarkar.gradle.buildtimetracker`.
 
-:information_source: Due to a
-[Gradle limitation](https://docs.gradle.org/6.5.1/userguide/upgrading_version_5.html#apis_buildlistener_buildstarted_and_gradle_buildstarted_have_been_deprecated)
-and the ill-thought-out [Configuration Cache](https://github.com/gradle/gradle/issues/18520) design, the build duration
-can't be calculated precisely. The bars and percentages are rounded off such that the output provides a good indication 
+:information_source: The bars and percentages are rounded off such that the output provides a good indication 
 of how long individual tasks took to complete relative to the build, but are not meant to be correct up to the 
-milliseconds.
+milliseconds. [Read this](https://github.com/asarkar/build-time-tracker/discussions/45) for details.
 
 :information_source: It is sufficient to apply the plugin to the root project; applying to subprojects will result in
 duplication of the report.
