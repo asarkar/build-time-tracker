@@ -9,6 +9,7 @@ import org.gradle.tooling.events.OperationCompletionListener
 import org.gradle.tooling.events.task.TaskFinishEvent
 import java.time.Duration
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicReference
 
@@ -26,14 +27,12 @@ abstract class TimingRecorder : BuildService<TimingRecorder.Params>, OperationCo
     }
 
     private val taskDurations: MutableCollection<Pair<String, Long>> = ConcurrentLinkedQueue()
-    private val buildStart = AtomicReference(Instant.EPOCH)
+    private val buildStart = AtomicReference(Instant.now().plus(30, ChronoUnit.DAYS))
 
     override fun onFinish(event: FinishEvent) {
         if (event is TaskFinishEvent) {
             val eventStart = Instant.ofEpochMilli(event.result.startTime)
-            buildStart.accumulateAndGet(eventStart) { curr, newVal ->
-                if (curr == Instant.EPOCH) newVal else minOf(curr, newVal)
-            }
+            buildStart.accumulateAndGet(eventStart, ::minOf)
             val duration = Duration.ofMillis(event.result.endTime - event.result.startTime).seconds
             if (duration >= parameters.minTaskDuration.get().seconds) {
                 taskDurations.add(event.descriptor.taskPath to duration)
