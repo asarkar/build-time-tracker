@@ -43,7 +43,7 @@ buildTimeTracker {
 of how long individual tasks took to complete relative to the build, but are not meant to be correct up to the 
 milliseconds. [Read this](https://github.com/asarkar/build-time-tracker/discussions/45) for details.
 
-:information_source: It is sufficient to apply the plugin to the root project; applying to subprojects will result in
+:information_source: It is sufficient to apply the plugin to the root project; also applying to subprojects will result in
 duplication of the report.
 
 :warning: If the output terminal does not support UTF-8 encoding, the bars may appear as weird characters. If you are
