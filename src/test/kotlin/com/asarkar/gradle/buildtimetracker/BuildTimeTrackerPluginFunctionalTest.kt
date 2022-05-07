@@ -93,6 +93,16 @@ class BuildTimeTrackerPluginFunctionalTest {
         printHorzLine(this, false)
     }
 
+    private fun run(rootDir: Path, vararg args: String): BuildResult {
+        return GradleRunner.create()
+            .withProjectDir(rootDir.toFile())
+            .withArguments(*args, "-q", "--warning-mode=all", "--stacktrace")
+            .withPluginClasspath()
+            .withDebug(false)
+            .forwardOutput()
+            .build()
+    }
+
     @Test
     fun testConsoleOutputKotlin() {
         val buildFile = newBuildFile(testProjectDir, "build.gradle.kts")
@@ -111,7 +121,7 @@ class BuildTimeTrackerPluginFunctionalTest {
                 """
         )
 
-        val result = run(testProjectDir, taskName)
+        val result = run(buildFile.parent, taskName)
 
         assertThat(result.task(taskName)?.outcome == SUCCESS)
         val lastLine = result.output
@@ -138,7 +148,7 @@ class BuildTimeTrackerPluginFunctionalTest {
                 """
         )
 
-        val result = run(testProjectDir, taskName)
+        val result = run(buildFile.parent, taskName)
 
         assertThat(result.task(taskName)?.outcome == SUCCESS)
         val lastLine = result.output
@@ -167,7 +177,7 @@ class BuildTimeTrackerPluginFunctionalTest {
                 """
         )
 
-        val result = run(testProjectDir, taskName)
+        val result = run(buildFile.parent, taskName)
         val csvFile = testProjectDir.resolve(Constants.CSV_FILENAME)
         assertThat(result.task(taskName)?.outcome == SUCCESS)
         assertThat(Files.exists(csvFile)).isTrue
@@ -196,7 +206,7 @@ class BuildTimeTrackerPluginFunctionalTest {
                 """
         )
 
-        val result = run(testProjectDir, taskName)
+        val result = run(buildFile.parent, taskName)
         val csvFile = testProjectDir.resolve(Constants.CSV_FILENAME)
         assertThat(result.task(taskName)?.outcome == SUCCESS)
         assertThat(Files.exists(csvFile)).isTrue
@@ -230,7 +240,7 @@ class BuildTimeTrackerPluginFunctionalTest {
                 """
         )
 
-        val result = run(testProjectDir, "a", "b")
+        val result = run(buildFile.parent, "a", "b")
 
         assertThat(result.task(taskName)?.outcome == SUCCESS)
         val lines = result.output
@@ -269,7 +279,7 @@ class BuildTimeTrackerPluginFunctionalTest {
                 """
         )
 
-        val result = run(testProjectDir, "a", "b")
+        val result = run(buildFile.parent, "a", "b")
 
         assertThat(result.task(taskName)?.outcome == SUCCESS)
         val lines = result.output
@@ -308,7 +318,7 @@ class BuildTimeTrackerPluginFunctionalTest {
                 """
         )
 
-        val result = run(testProjectDir, "a", "b")
+        val result = run(buildFile.parent, "a", "b")
 
         assertThat(result.task(taskName)?.outcome == SUCCESS)
         val lines = result.output
@@ -346,7 +356,7 @@ class BuildTimeTrackerPluginFunctionalTest {
                 """
         )
 
-        val result = run(sharedTestProjectDir, "--configuration-cache", "a", "b")
+        val result = run(buildFile.parent, "--configuration-cache", "a", "b")
 
         assertThat(result.task(taskName)?.outcome == SUCCESS)
         val lines = result.output
@@ -394,7 +404,7 @@ class BuildTimeTrackerPluginFunctionalTest {
                 """
         )
 
-        val result = run(sharedTestProjectDir, "--configuration-cache", "a", "b")
+        val result = run(buildFile.parent, "--configuration-cache", "a", "b")
 
         assertThat(result.task(taskName)?.outcome == SUCCESS)
         val lines = result.output
@@ -460,7 +470,7 @@ class BuildTimeTrackerPluginFunctionalTest {
         println(settingsFile.readText())
         printHorzLine(settingsFile, false)
 
-        val result = run(testProjectDir, "--parallel", "a", "b")
+        val result = run(settingsFile.parent, "--parallel", "a", "b")
 
         assertThat(result.task(taskName)?.outcome == SUCCESS)
         val lines = result.output
@@ -472,15 +482,5 @@ class BuildTimeTrackerPluginFunctionalTest {
                 ":lib1:a | 1S |  50% | ${Printer.BLOCK_CHAR}",
                 ":lib2:b | 2S | 100% | ${Printer.BLOCK_CHAR.toString().repeat(2)}"
             )
-    }
-
-    private fun run(rootDir: Path, vararg args: String): BuildResult {
-        return GradleRunner.create()
-            .withProjectDir(rootDir.toFile())
-            .withArguments(*args, "-q", "--warning-mode=all", "--stacktrace")
-            .withPluginClasspath()
-            .withDebug(false)
-            .forwardOutput()
-            .build()
     }
 }
