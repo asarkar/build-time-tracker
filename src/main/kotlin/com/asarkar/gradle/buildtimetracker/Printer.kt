@@ -46,17 +46,19 @@ interface Printer : Closeable {
             )
 
             if (!input.showBars) {
-                out.println(common)
+                out.printf("%s%s%s\n", prefix(), common, suffix())
             } else if (input.barPosition == BarPosition.TRAILING) {
-                out.printf("%s%s%s\n", common, delimiter, "$BLOCK_CHAR".repeat(numBlocks))
+                out.printf("%s%s%s%s%s\n", prefix(), common, delimiter, "$BLOCK_CHAR".repeat(numBlocks), suffix())
             } else {
-                out.printf("%${maxNumBlocks}s%s%s\n", "$BLOCK_CHAR".repeat(numBlocks), delimiter, common)
+                out.printf("%s%${maxNumBlocks}s%s%s%s\n", prefix(), "$BLOCK_CHAR".repeat(numBlocks), delimiter, common, suffix())
             }
         }
     }
 
     val out: PrintStream
     val delimiter: String
+    fun prefix(): String = ""
+    fun suffix(): String = ""
 
     companion object {
         const val BLOCK_CHAR = '\u2588'
@@ -77,6 +79,11 @@ interface Printer : Closeable {
                     val csvFile = reportsDir
                         .resolve(Constants.CSV_FILENAME)
                     CsvPrinter(newOutputStream(csvFile))
+                }
+                Output.MARKDOWN -> {
+                    val markdownFile = reportsDir
+                        .resolve(Constants.MARKDOWN_FILENAME)
+                    MarkdownPrinter(newOutputStream(markdownFile))
                 }
             }
         }

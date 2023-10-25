@@ -23,7 +23,12 @@ private class PrinterWrapper(val output: Output) {
     val delegate = when (output) {
         Output.CONSOLE -> ConsolePrinter(PrintStream(out))
         Output.CSV -> CsvPrinter(PrintStream(out))
+        Output.MARKDOWN -> MarkdownPrinter(PrintStream(out))
     }
+
+    val prefix: String = delegate.prefix()
+    val suffix: String = delegate.suffix()
+    val delimiter: String = delegate.delimiter
 
     fun lines(): List<String> {
         val list = out.use { baos ->
@@ -35,14 +40,19 @@ private class PrinterWrapper(val output: Output) {
         if (output == Output.CONSOLE) {
             return list.drop(1)
         }
+
+        if (output == Output.MARKDOWN) {
+            return list.drop(3)
+        }
         return list
     }
 }
 
 private data class Line(val task: String, val duration: String, val percent: String, val bar: String)
 
-private fun String.toLine(barPosition: BarPosition, delimiter: String): Line {
-    val tokens = this.split(delimiter)
+private fun String.toLine(barPosition: BarPosition, prefix: String, delimiter: String, suffix: String): Line {
+    val tokens = this.removeSurrounding(prefix, suffix)
+        .split(delimiter)
         .map { it.trim() }
         .takeIf { it.size == 4 } ?: fail("Unexpected line format: $this")
     return if (barPosition == BarPosition.TRAILING) {
@@ -88,7 +98,7 @@ class PrinterTest {
         val lines = printerWrapper.lines()
         val line = lines
             .first()
-            .toLine(defaultInput.barPosition, printerWrapper.delegate.delimiter)
+            .toLine(defaultInput.barPosition, printerWrapper.prefix, printerWrapper.delimiter, printerWrapper.suffix)
         assertThat(line.task).isEqualTo(taskDurations[0].first)
         assertThat(line.duration).isEqualTo("4S")
         assertThat(line.percent).isEqualTo("14%")
@@ -112,7 +122,7 @@ class PrinterTest {
         val lines = printerWrapper.lines()
         val line = lines
             .first()
-            .toLine(input.barPosition, printerWrapper.delegate.delimiter)
+            .toLine(input.barPosition, printerWrapper.prefix, printerWrapper.delimiter, printerWrapper.suffix)
         assertThat(line.bar.toCharArray().all { it == BLOCK_CHAR }).isTrue
         assertThat(line.duration).isEqualTo("4S")
         assertThat(line.percent).isEqualTo("14%")
@@ -135,7 +145,7 @@ class PrinterTest {
 
         printerWrapper.lines()
             .forEach {
-                val line = it.toLine(input.barPosition, printerWrapper.delegate.delimiter)
+                val line = it.toLine(input.barPosition, printerWrapper.prefix, printerWrapper.delimiter, printerWrapper.suffix)
                 assertThat(line.bar.length <= input.maxWidth)
             }
     }
@@ -170,13 +180,17 @@ class PrinterTest {
 
         val lines = printerWrapper.lines()
         assertThat(lines).hasSize(2)
-        val pattern = printerWrapper.delegate.delimiter
+        val pattern = printerWrapper.delimiter
             .trim()
             .toRegex(RegexOption.LITERAL)
-        val firstDelimiterRanges = pattern.findAll(lines.first())
+
+        val firstLine = lines.first().removeSurrounding(printerWrapper.prefix, printerWrapper.suffix)
+        val lastLine  = lines.last().removeSurrounding(printerWrapper.prefix, printerWrapper.suffix)
+
+        val firstDelimiterRanges = pattern.findAll(firstLine)
             .map { it.range.first to it.range.last }
             .toList()
-        val secondDelimiterRanges = pattern.findAll(lines.last())
+        val secondDelimiterRanges = pattern.findAll(lastLine)
             .map { it.range.first to it.range.last }
             .toList()
         assertThat(firstDelimiterRanges).containsExactlyElementsOf(secondDelimiterRanges)
@@ -197,7 +211,7 @@ class PrinterTest {
 
         val lines = printerWrapper.lines()
         assertThat(lines).hasSize(2)
-        val pattern = printerWrapper.delegate.delimiter
+        val pattern = printerWrapper.delimiter
             .trim()
             .toRegex(RegexOption.LITERAL)
         val firstDelimiterRanges = pattern.findAll(lines.first())
@@ -222,7 +236,7 @@ class PrinterTest {
         printerWrapper.delegate.print(input)
         val lines = printerWrapper.lines()
         assertThat(lines).hasSize(1)
-        assertThat(lines.last().toLine(input.barPosition, printerWrapper.delegate.delimiter).percent)
+        assertThat(lines.last().toLine(input.barPosition, printerWrapper.prefix, printerWrapper.delimiter, printerWrapper.suffix).percent)
             .isEqualTo("100%")
     }
 
@@ -244,7 +258,7 @@ class PrinterTest {
             val lines = csvFile.readLines()
             val line = lines
                 .first()
-                .toLine(defaultInput.barPosition, printer.delimiter)
+                .toLine(defaultInput.barPosition, printer.prefix(), printer.delimiter, printer.suffix())
             assertThat(line.task).isEqualTo(taskDurations[0].first)
             assertThat(line.duration).isEqualTo("4S")
             assertThat(line.percent).isEqualTo("14%")

@@ -11,7 +11,7 @@ enum class BarPosition {
 }
 
 enum class Output {
-    CONSOLE, CSV
+    CONSOLE, CSV, MARKDOWN
 }
 
 enum class Sort {
