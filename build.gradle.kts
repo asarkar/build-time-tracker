@@ -3,20 +3,13 @@ plugins {
     kotlin("jvm")
     id("org.jlleitschuh.gradle.ktlint")
     id("com.gradle.plugin-publish")
-    `maven-publish`
+    id("signing")
     jacoco
 }
 
 val pluginWebsite: String by project
 val pluginVcsUrl: String by project
 val pluginTags: String by project
-
-pluginBundle {
-    website = pluginWebsite
-    vcsUrl = pluginVcsUrl
-    tags = pluginTags.split(",").map(String::trim)
-}
-
 val pluginId: String by project
 val pluginDisplayName: String by project
 val pluginDescription: String by project
@@ -24,12 +17,15 @@ val pluginImplementationClass: String by project
 val pluginDeclarationName: String by project
 
 gradlePlugin {
+    website.set(pluginWebsite)
+    vcsUrl.set(pluginVcsUrl)
     plugins {
         create(pluginDeclarationName) {
             id = pluginId
             displayName = pluginDisplayName
             description = pluginDescription
             implementationClass = pluginImplementationClass
+            tags.set(pluginTags.split(',').map(String::trim))
         }
     }
 }
@@ -57,15 +53,15 @@ dependencies {
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
     kotlinOptions {
-        freeCompilerArgs = listOf("-Xjsr305=strict", "-Xopt-in=kotlin.RequiresOptIn")
-        jvmTarget = "11"
+        freeCompilerArgs = listOf("-Xjsr305=strict", "-opt-in=kotlin.RequiresOptIn")
+        jvmTarget = "17"
     }
 }
 
 plugins.withType<JavaPlugin>().configureEach {
     extensions.configure<JavaPluginExtension> {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 

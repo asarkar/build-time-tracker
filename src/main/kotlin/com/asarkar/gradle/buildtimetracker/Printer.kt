@@ -16,34 +16,41 @@ data class PrinterInput(
     val taskDurations: Collection<Pair<String, Long>>,
     val maxWidth: Int,
     val showBars: Boolean,
-    val barPosition: BarPosition
+    val barPosition: BarPosition,
 )
 
 interface Printer : Closeable {
     fun print(input: PrinterInput) {
         // find the maxes needed for formatting
-        val (maxLabelLen, maxDuration, maxFormattedDurationLen) = input.taskDurations.fold(
-            Triple(-1, -1L, -1)
-        ) { acc, elem ->
-            val maxDuration = maxOf(acc.second, elem.second)
-            Triple(maxOf(acc.first, elem.first.length), maxDuration, maxOf(acc.third, maxDuration.format().length))
-        }
+        val (maxLabelLen, maxDuration, maxFormattedDurationLen) =
+            input.taskDurations.fold(
+                Triple(-1, -1L, -1),
+            ) { acc, elem ->
+                val maxDuration = maxOf(acc.second, elem.second)
+                Triple(maxOf(acc.first, elem.first.length), maxDuration, maxOf(acc.third, maxDuration.format().length))
+            }
 
         // scale the values to max column width so that the corresponding bars don't shoot out of the screen
         val scalingFraction = minOf(input.maxWidth.toLong(), maxDuration) / maxDuration.toDouble()
         val maxNumBlocks = round(maxDuration * scalingFraction).toInt()
-        val maxFormattedPercentLen = maxDuration.percentOf(input.buildDuration)
-            .format()
-            .length
+        val maxFormattedPercentLen =
+            maxDuration.percentOf(input.buildDuration)
+                .format()
+                .length
 
         input.taskDurations.forEach {
             val numBlocks = round(it.second * scalingFraction).toInt()
             val percent = it.second.percentOf(input.buildDuration)
 
-            val common = String.format(
-                "%${maxLabelLen}s%s%${maxFormattedDurationLen}s%s%${maxFormattedPercentLen}s",
-                it.first, delimiter, it.second.format(), delimiter, percent.format()
-            )
+            val common =
+                String.format(
+                    "%${maxLabelLen}s%s%${maxFormattedDurationLen}s%s%${maxFormattedPercentLen}s",
+                    it.first,
+                    delimiter,
+                    it.second.format(),
+                    delimiter,
+                    percent.format(),
+                )
 
             if (!input.showBars) {
                 out.println(common)
@@ -62,6 +69,7 @@ interface Printer : Closeable {
         const val BLOCK_CHAR = '\u2588'
 
         private fun Long.percentOf(buildDuration: Long): Int = round(this / buildDuration.toDouble() * 100).toInt()
+
         internal fun Long.format(): String {
             val separators = setOf('P', 'D', 'T')
             return Duration.ofSeconds(this).toString()
@@ -70,12 +78,16 @@ interface Printer : Closeable {
 
         private fun Int.format(): String = String.format("%d%%", this)
 
-        fun newInstance(output: Output, reportsDir: File): Printer {
+        fun newInstance(
+            output: Output,
+            reportsDir: File,
+        ): Printer {
             return when (output) {
                 Output.CONSOLE -> ConsolePrinter()
                 Output.CSV -> {
-                    val csvFile = reportsDir
-                        .resolve(Constants.CSV_FILENAME)
+                    val csvFile =
+                        reportsDir
+                            .resolve(Constants.CSV_FILENAME)
                     CsvPrinter(newOutputStream(csvFile))
                 }
             }
@@ -86,7 +98,7 @@ interface Printer : Closeable {
             return PrintStream(
                 Files.newOutputStream(csvFile.toPath(), CREATE, WRITE, TRUNCATE_EXISTING),
                 false,
-                StandardCharsets.UTF_8.name()
+                StandardCharsets.UTF_8.name(),
             )
         }
     }

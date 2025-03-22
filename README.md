@@ -24,8 +24,6 @@ You can customize the plugin as follows:
 ```
 buildTimeTracker {
     barPosition = BarPosition.TRAILING or BarPosition.LEADING, default is TRAILING
-    // Deprecated: Will be removed in v5, use sortBy
-    sort = false or true, default is false
     sortBy = Sort.ASC, Sort.DESC, or Sort.NONE, default is NONE
     output = Output.CONSOLE or Output.CSV, default is CONSOLE
     maxWidth = 120, default is 80
@@ -55,8 +53,8 @@ Microsoft Excel. How to do this depends on the Operating System, and Excel versi
 is one way.
 
 ## Minimum Requirements
-- Java 11
-- Gradle 6.1
+- Java 17
+- Gradle 7.3
 
 ## Contributing
 

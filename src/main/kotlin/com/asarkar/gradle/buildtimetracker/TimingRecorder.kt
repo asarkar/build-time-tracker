@@ -13,11 +13,9 @@ import java.time.temporal.ChronoUnit
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicReference
 
-@Suppress("UnstableApiUsage")
 abstract class TimingRecorder : BuildService<TimingRecorder.Params>, OperationCompletionListener, AutoCloseable {
     interface Params : BuildServiceParameters {
         val barPosition: Property<BarPosition>
-        val sort: Property<Boolean>
         val sortBy: Property<Sort>
         val output: Property<Output>
         val maxWidth: Property<Int>
@@ -48,19 +46,21 @@ abstract class TimingRecorder : BuildService<TimingRecorder.Params>, OperationCo
         val buildDuration = Duration.between(buildStart.get(), Instant.now()).seconds
         Printer.newInstance(parameters.output.get(), parameters.reportsDir.get().asFile)
             .use { printer ->
-                val sort: Sort = if (parameters.sort.get()) Sort.DESC else parameters.sortBy.get()
-                val durations = when (sort) {
-                    Sort.NONE -> taskDurations
-                    Sort.DESC -> taskDurations.sortedBy { -it.second }
-                    Sort.ASC -> taskDurations.sortedBy { it.second }
-                }
-                val input = PrinterInput(
-                    buildDuration,
-                    durations,
-                    parameters.maxWidth.get(),
-                    parameters.showBars.get(),
-                    parameters.barPosition.get()
-                )
+                val sortBy: Sort = parameters.sortBy.get()
+                val durations =
+                    when (sortBy) {
+                        Sort.NONE -> taskDurations
+                        Sort.DESC -> taskDurations.sortedBy { -it.second }
+                        Sort.ASC -> taskDurations.sortedBy { it.second }
+                    }
+                val input =
+                    PrinterInput(
+                        buildDuration,
+                        durations,
+                        parameters.maxWidth.get(),
+                        parameters.showBars.get(),
+                        parameters.barPosition.get(),
+                    )
                 printer.print(input)
             }
     }
