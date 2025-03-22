@@ -1,3 +1,5 @@
+import java.util.Base64
+
 plugins {
     `java-gradle-plugin`
     kotlin("jvm")
@@ -78,6 +80,17 @@ publishing {
             mavenLocal()
         }
     }
+}
+
+fun base64Decode(prop: String): String? {
+    return project.findProperty(prop)?.let {
+        String(Base64.getDecoder().decode(it.toString())).trim()
+    }
+}
+
+signing {
+    useInMemoryPgpKeys(base64Decode("signingKey"), base64Decode("signingPassword"))
+    sign(*publishing.publications.toTypedArray())
 }
 
 tasks.wrapper {
