@@ -20,17 +20,19 @@ import kotlin.io.path.readLines
 
 private class PrinterWrapper(val output: Output) {
     private val out = ByteArrayOutputStream()
-    val delegate = when (output) {
-        Output.CONSOLE -> ConsolePrinter(PrintStream(out))
-        Output.CSV -> CsvPrinter(PrintStream(out))
-    }
+    val delegate =
+        when (output) {
+            Output.CONSOLE -> ConsolePrinter(PrintStream(out))
+            Output.CSV -> CsvPrinter(PrintStream(out))
+        }
 
     fun lines(): List<String> {
-        val list = out.use { baos ->
-            String(baos.toByteArray())
-                .lines()
-                .filter { it.isNotEmpty() }
-        }
+        val list =
+            out.use { baos ->
+                String(baos.toByteArray())
+                    .lines()
+                    .filter { it.isNotEmpty() }
+            }
 
         if (output == Output.CONSOLE) {
             return list.drop(1)
@@ -41,10 +43,14 @@ private class PrinterWrapper(val output: Output) {
 
 private data class Line(val task: String, val duration: String, val percent: String, val bar: String)
 
-private fun String.toLine(barPosition: BarPosition, delimiter: String): Line {
-    val tokens = this.split(delimiter)
-        .map { it.trim() }
-        .takeIf { it.size == 4 } ?: fail("Unexpected line format: $this")
+private fun String.toLine(
+    barPosition: BarPosition,
+    delimiter: String,
+): Line {
+    val tokens =
+        this.split(delimiter)
+            .map { it.trim() }
+            .takeIf { it.size == 4 } ?: fail("Unexpected line format: $this")
     return if (barPosition == BarPosition.TRAILING) {
         Line(tokens[0], tokens[1], tokens[2], tokens[3])
     } else {
@@ -53,23 +59,25 @@ private fun String.toLine(barPosition: BarPosition, delimiter: String): Line {
 }
 
 class PrinterTest {
-    private val taskDurations = listOf(
-        ":commons:extractIncludeProto" to 4L,
-        ":commons:compileKotlin" to 2L,
-        ":commons:compileJava" to 6L,
-        ":service-client:compileKotlin" to 1L,
-        ":webapp:compileKotlin" to 1L,
-        ":webapp:dockerBuildImage" to 4L,
-        ":webapp:dockerPushImage" to 4L
-    )
+    private val taskDurations =
+        listOf(
+            ":commons:extractIncludeProto" to 4L,
+            ":commons:compileKotlin" to 2L,
+            ":commons:compileJava" to 6L,
+            ":service-client:compileKotlin" to 1L,
+            ":webapp:compileKotlin" to 1L,
+            ":webapp:dockerBuildImage" to 4L,
+            ":webapp:dockerPushImage" to 4L,
+        )
 
-    private val defaultInput = PrinterInput(
-        28L,
-        taskDurations,
-        Constants.DEFAULT_MAX_WIDTH,
-        Constants.DEFAULT_SHOW_BARS,
-        Constants.DEFAULT_BAR_POSITION
-    )
+    private val defaultInput =
+        PrinterInput(
+            28L,
+            taskDurations,
+            Constants.DEFAULT_MAX_WIDTH,
+            Constants.DEFAULT_SHOW_BARS,
+            Constants.DEFAULT_BAR_POSITION,
+        )
     private lateinit var printerWrapper: PrinterWrapper
 
     @AfterEach
@@ -86,9 +94,10 @@ class PrinterTest {
         printerWrapper.delegate.print(defaultInput)
 
         val lines = printerWrapper.lines()
-        val line = lines
-            .first()
-            .toLine(defaultInput.barPosition, printerWrapper.delegate.delimiter)
+        val line =
+            lines
+                .first()
+                .toLine(defaultInput.barPosition, printerWrapper.delegate.delimiter)
         assertThat(line.task).isEqualTo(taskDurations[0].first)
         assertThat(line.duration).isEqualTo("4S")
         assertThat(line.percent).isEqualTo("14%")
@@ -110,9 +119,10 @@ class PrinterTest {
         printerWrapper.delegate.print(input)
 
         val lines = printerWrapper.lines()
-        val line = lines
-            .first()
-            .toLine(input.barPosition, printerWrapper.delegate.delimiter)
+        val line =
+            lines
+                .first()
+                .toLine(input.barPosition, printerWrapper.delegate.delimiter)
         assertThat(line.bar.toCharArray().all { it == BLOCK_CHAR }).isTrue
         assertThat(line.duration).isEqualTo("4S")
         assertThat(line.percent).isEqualTo("14%")
@@ -140,9 +150,9 @@ class PrinterTest {
             }
     }
 
+    // https://github.com/asarkar/build-time-tracker/issues/1
     @ParameterizedTest
     @EnumSource(Output::class)
-    // https://github.com/asarkar/build-time-tracker/issues/1
     fun testPrintHideBars(output: Output) {
         printerWrapper = PrinterWrapper(output)
         val input = defaultInput.copy(showBars = false)
@@ -154,31 +164,39 @@ class PrinterTest {
             }
     }
 
+    // https://github.com/asarkar/build-time-tracker/issues/3
     @ParameterizedTest
     @MethodSource("argsProvider")
-    // https://github.com/asarkar/build-time-tracker/issues/3
-    fun testFormatting(output: Output, position: BarPosition) {
+    fun testFormatting(
+        output: Output,
+        position: BarPosition,
+    ) {
         printerWrapper = PrinterWrapper(output)
-        val input = defaultInput.copy(
-            taskDurations = listOf(
-                ":service-client:compileKotlin" to 1L,
-                "webapp:test" to 13L
-            ),
-            barPosition = position
-        )
+        val input =
+            defaultInput.copy(
+                taskDurations =
+                    listOf(
+                        ":service-client:compileKotlin" to 1L,
+                        "webapp:test" to 13L,
+                    ),
+                barPosition = position,
+            )
         printerWrapper.delegate.print(input)
 
         val lines = printerWrapper.lines()
         assertThat(lines).hasSize(2)
-        val pattern = printerWrapper.delegate.delimiter
-            .trim()
-            .toRegex(RegexOption.LITERAL)
-        val firstDelimiterRanges = pattern.findAll(lines.first())
-            .map { it.range.first to it.range.last }
-            .toList()
-        val secondDelimiterRanges = pattern.findAll(lines.last())
-            .map { it.range.first to it.range.last }
-            .toList()
+        val pattern =
+            printerWrapper.delegate.delimiter
+                .trim()
+                .toRegex(RegexOption.LITERAL)
+        val firstDelimiterRanges =
+            pattern.findAll(lines.first())
+                .map { it.range.first to it.range.last }
+                .toList()
+        val secondDelimiterRanges =
+            pattern.findAll(lines.last())
+                .map { it.range.first to it.range.last }
+                .toList()
         assertThat(firstDelimiterRanges).containsExactlyElementsOf(secondDelimiterRanges)
     }
 
@@ -186,26 +204,31 @@ class PrinterTest {
     @EnumSource(Output::class)
     fun testFormattingHideBars(output: Output) {
         printerWrapper = PrinterWrapper(output)
-        val input = defaultInput.copy(
-            taskDurations = listOf(
-                ":service-client:compileKotlin" to 1L,
-                "webapp:test" to 13L
-            ),
-            showBars = false
-        )
+        val input =
+            defaultInput.copy(
+                taskDurations =
+                    listOf(
+                        ":service-client:compileKotlin" to 1L,
+                        "webapp:test" to 13L,
+                    ),
+                showBars = false,
+            )
         printerWrapper.delegate.print(input)
 
         val lines = printerWrapper.lines()
         assertThat(lines).hasSize(2)
-        val pattern = printerWrapper.delegate.delimiter
-            .trim()
-            .toRegex(RegexOption.LITERAL)
-        val firstDelimiterRanges = pattern.findAll(lines.first())
-            .map { it.range.first to it.range.last }
-            .toList()
-        val secondDelimiterRanges = pattern.findAll(lines.last())
-            .map { it.range.first to it.range.last }
-            .toList()
+        val pattern =
+            printerWrapper.delegate.delimiter
+                .trim()
+                .toRegex(RegexOption.LITERAL)
+        val firstDelimiterRanges =
+            pattern.findAll(lines.first())
+                .map { it.range.first to it.range.last }
+                .toList()
+        val secondDelimiterRanges =
+            pattern.findAll(lines.last())
+                .map { it.range.first to it.range.last }
+                .toList()
         assertThat(firstDelimiterRanges).containsExactlyElementsOf(secondDelimiterRanges)
     }
 
@@ -213,12 +236,14 @@ class PrinterTest {
     @EnumSource(Output::class)
     fun testFormatHundredPercent(output: Output) {
         printerWrapper = PrinterWrapper(output)
-        val input = defaultInput.copy(
-            buildDuration = 10L,
-            taskDurations = listOf(
-                ":service-client:compileKotlin" to 10L
+        val input =
+            defaultInput.copy(
+                buildDuration = 10L,
+                taskDurations =
+                    listOf(
+                        ":service-client:compileKotlin" to 10L,
+                    ),
             )
-        )
         printerWrapper.delegate.print(input)
         val lines = printerWrapper.lines()
         assertThat(lines).hasSize(1)
@@ -228,13 +253,18 @@ class PrinterTest {
 
     @ParameterizedTest
     @MethodSource("durationProvider")
-    fun testDurationFormatting(duration: Long, formatted: String) {
+    fun testDurationFormatting(
+        duration: Long,
+        formatted: String,
+    ) {
         assertThat(duration.format()).isEqualTo(formatted)
     }
 
     @OptIn(ExperimentalPathApi::class)
     @Test
-    fun testCsvPrinter(@TempDir testProjectDir: Path) {
+    fun testCsvPrinter(
+        @TempDir testProjectDir: Path,
+    ) {
         val csvFile = testProjectDir.resolve(Constants.CSV_FILENAME)
         val csvPrinter = CsvPrinter(Printer.newOutputStream(csvFile.toFile()))
 
@@ -242,9 +272,10 @@ class PrinterTest {
             printer.print(defaultInput)
             assertThat(Files.exists(csvFile)).isTrue
             val lines = csvFile.readLines()
-            val line = lines
-                .first()
-                .toLine(defaultInput.barPosition, printer.delimiter)
+            val line =
+                lines
+                    .first()
+                    .toLine(defaultInput.barPosition, printer.delimiter)
             assertThat(line.task).isEqualTo(taskDurations[0].first)
             assertThat(line.duration).isEqualTo("4S")
             assertThat(line.percent).isEqualTo("14%")
@@ -281,7 +312,7 @@ class PrinterTest {
                 Arguments.arguments(3900, "1H5M"),
                 Arguments.arguments(61, "1M1S"),
                 Arguments.arguments(172800, "48H"),
-                Arguments.arguments(172859, "48H59S")
+                Arguments.arguments(172859, "48H59S"),
             )
         }
     }

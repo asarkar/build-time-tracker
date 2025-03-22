@@ -36,20 +36,24 @@ class BuildTimeTrackerPluginFunctionalTest {
         lateinit var sharedTestProjectDir: Path
     }
 
-    private val props = generateSequence(Paths.get(javaClass.protectionDomain.codeSource.location.path)) {
-        val props = it.resolve("gradle.properties")
-        if (Files.exists(props)) props else it.parent
-    }
-        .dropWhile { Files.isDirectory(it) }
-        .take(1)
-        .iterator()
-        .next()
-        .inputStream()
-        .use {
-            Properties().apply { load(it) }
+    private val props =
+        generateSequence(Paths.get(javaClass.protectionDomain.codeSource.location.path)) {
+            val props = it.resolve("gradle.properties")
+            if (Files.exists(props)) props else it.parent
         }
+            .dropWhile { Files.isDirectory(it) }
+            .take(1)
+            .iterator()
+            .next()
+            .inputStream()
+            .use {
+                Properties().apply { load(it) }
+            }
 
-    private fun newBuildFile(rootDir: Path, name: String): Path {
+    private fun newBuildFile(
+        rootDir: Path,
+        name: String,
+    ): Path {
         Files.createDirectories(rootDir)
         val buildFile = rootDir.resolve(name)
         Files.newBufferedWriter(buildFile, CREATE, WRITE, TRUNCATE_EXISTING).use {
@@ -63,14 +67,17 @@ class BuildTimeTrackerPluginFunctionalTest {
                 plugins {
                     id("${props.getProperty("pluginId")}")
                 }
-                """.trimIndent()
+                """.trimIndent(),
             )
             it.newLine()
         }
         return buildFile
     }
 
-    private fun printHorzLine(file: Path, start: Boolean) {
+    private fun printHorzLine(
+        file: Path,
+        start: Boolean,
+    ) {
         val text = file.fileName.toString() + (if (start) " start" else " end")
         val n = 80 - text.length
         val k = n / 2
@@ -79,7 +86,7 @@ class BuildTimeTrackerPluginFunctionalTest {
                 append("-".repeat(k))
                 append(text)
                 append("-".repeat(n - k))
-            }
+            },
         )
     }
 
@@ -93,7 +100,10 @@ class BuildTimeTrackerPluginFunctionalTest {
         printHorzLine(this, false)
     }
 
-    private fun run(rootDir: Path, vararg args: String): BuildResult {
+    private fun run(
+        rootDir: Path,
+        vararg args: String,
+    ): BuildResult {
         return GradleRunner.create()
             .withProjectDir(rootDir.toFile())
             .withArguments(*args, "-q", "--warning-mode=all", "--stacktrace")
@@ -118,15 +128,16 @@ class BuildTimeTrackerPluginFunctionalTest {
                 ${Constants.PLUGIN_EXTENSION_NAME} {
                     minTaskDuration.set(Duration.ofMillis(100))
                 }
-                """
+                """,
         )
 
         val result = run(buildFile.parent, taskName)
 
         assertThat(result.task(taskName)?.outcome == SUCCESS)
-        val lastLine = result.output
-            .lines()
-            .lastOrNull { it.isNotEmpty() }
+        val lastLine =
+            result.output
+                .lines()
+                .lastOrNull { it.isNotEmpty() }
         assertThat(lastLine).isEqualTo(":$taskName | 0S | 0% | ")
     }
 
@@ -145,15 +156,16 @@ class BuildTimeTrackerPluginFunctionalTest {
                 ${Constants.PLUGIN_EXTENSION_NAME} {
                     minTaskDuration = Duration.ofMillis(100)
                 }
-                """
+                """,
         )
 
         val result = run(buildFile.parent, taskName)
 
         assertThat(result.task(taskName)?.outcome == SUCCESS)
-        val lastLine = result.output
-            .lines()
-            .lastOrNull { it.isNotEmpty() }
+        val lastLine =
+            result.output
+                .lines()
+                .lastOrNull { it.isNotEmpty() }
         assertThat(lastLine).isEqualTo(":$taskName | 0S | 0% | ")
     }
 
@@ -174,7 +186,7 @@ class BuildTimeTrackerPluginFunctionalTest {
                     output.set(Output.CSV)
                     reportsDir.set(file("${testProjectDir.absolutePathString()}"))
                 }
-                """
+                """,
         )
 
         val result = run(buildFile.parent, taskName)
@@ -203,7 +215,7 @@ class BuildTimeTrackerPluginFunctionalTest {
                     output = Output.CSV
                     reportsDir = file("${testProjectDir.absolutePathString()}")
                 }
-                """
+                """,
         )
 
         val result = run(buildFile.parent, taskName)
@@ -213,45 +225,6 @@ class BuildTimeTrackerPluginFunctionalTest {
         val lines = csvFile.readLines()
         assertThat(lines).hasSize(1)
         assertThat(lines.first()).isEqualTo(":$taskName,0S,0%,")
-    }
-
-    @Test
-    fun testSort() {
-        val buildFile = newBuildFile(testProjectDir, "build.gradle.kts")
-        buildFile.append(
-            """
-                tasks.register("a") {
-                    doLast {
-                        Thread.sleep(1100)
-                        println("Hello, World!")
-                    }
-                }
-                tasks.register("b") {
-                    doLast {
-                        Thread.sleep(2100)
-                        println("Hi there!")
-                    }
-                }
-                
-                ${Constants.PLUGIN_EXTENSION_NAME} {
-                    minTaskDuration.set(Duration.ofMillis(100))
-                    sort.set(true)
-                }
-                """
-        )
-
-        val result = run(buildFile.parent, "a", "b")
-
-        assertThat(result.task(taskName)?.outcome == SUCCESS)
-        val lines = result.output
-            .lines()
-            .filter { it.isNotEmpty() }
-            .takeLast(2)
-        assertThat(lines)
-            .containsExactly(
-                ":b | 2S | 67% | ${Printer.BLOCK_CHAR.toString().repeat(2)}",
-                ":a | 1S | 33% | ${Printer.BLOCK_CHAR}"
-            )
     }
 
     @Test
@@ -276,20 +249,21 @@ class BuildTimeTrackerPluginFunctionalTest {
                     minTaskDuration.set(Duration.ofMillis(100))
                     sortBy.set(Sort.DESC)
                 }
-                """
+                """,
         )
 
         val result = run(buildFile.parent, "a", "b")
 
         assertThat(result.task(taskName)?.outcome == SUCCESS)
-        val lines = result.output
-            .lines()
-            .filter { it.isNotEmpty() }
-            .takeLast(2)
+        val lines =
+            result.output
+                .lines()
+                .filter { it.isNotEmpty() }
+                .takeLast(2)
         assertThat(lines)
             .containsExactly(
                 ":b | 2S | 67% | ${Printer.BLOCK_CHAR.toString().repeat(2)}",
-                ":a | 1S | 33% | ${Printer.BLOCK_CHAR}"
+                ":a | 1S | 33% | ${Printer.BLOCK_CHAR}",
             )
     }
 
@@ -315,20 +289,21 @@ class BuildTimeTrackerPluginFunctionalTest {
                     minTaskDuration.set(Duration.ofMillis(100))
                     sortBy.set(Sort.ASC)
                 }
-                """
+                """,
         )
 
         val result = run(buildFile.parent, "a", "b")
 
         assertThat(result.task(taskName)?.outcome == SUCCESS)
-        val lines = result.output
-            .lines()
-            .filter { it.isNotEmpty() }
-            .takeLast(2)
+        val lines =
+            result.output
+                .lines()
+                .filter { it.isNotEmpty() }
+                .takeLast(2)
         assertThat(lines)
             .containsExactly(
                 ":a | 1S | 33% | ${Printer.BLOCK_CHAR}",
-                ":b | 2S | 67% | ${Printer.BLOCK_CHAR.toString().repeat(2)}"
+                ":b | 2S | 67% | ${Printer.BLOCK_CHAR.toString().repeat(2)}",
             )
     }
 
@@ -353,28 +328,29 @@ class BuildTimeTrackerPluginFunctionalTest {
                 ${Constants.PLUGIN_EXTENSION_NAME} {
                     minTaskDuration.set(Duration.ofMillis(100))
                 }
-                """
+                """,
         )
 
         val result = run(buildFile.parent, "--configuration-cache", "a", "b")
 
         assertThat(result.task(taskName)?.outcome == SUCCESS)
-        val lines = result.output
-            .lines()
-            .filter { it.isNotEmpty() }
-            .takeLast(2)
+        val lines =
+            result.output
+                .lines()
+                .filter { it.isNotEmpty() }
+                .takeLast(2)
         if (repetitionInfo.currentRepetition == 1) {
             assertThat(lines)
                 .containsExactly(
                     ":a | 1S | 33% | ${Printer.BLOCK_CHAR}",
-                    ":b | 2S | 67% | ${Printer.BLOCK_CHAR.toString().repeat(2)}"
+                    ":b | 2S | 67% | ${Printer.BLOCK_CHAR.toString().repeat(2)}",
                 )
         } else {
             // https://github.com/asarkar/build-time-tracker/discussions/45
             assertThat(lines)
                 .containsExactly(
                     ":a | 1S |  50% | ${Printer.BLOCK_CHAR}",
-                    ":b | 2S | 100% | ${Printer.BLOCK_CHAR.toString().repeat(2)}"
+                    ":b | 2S | 100% | ${Printer.BLOCK_CHAR.toString().repeat(2)}",
                 )
         }
     }
@@ -401,28 +377,29 @@ class BuildTimeTrackerPluginFunctionalTest {
                     minTaskDuration.set(Duration.ofMillis(100))
                     sortBy.set(Sort.DESC)
                 }
-                """
+                """,
         )
 
         val result = run(buildFile.parent, "--configuration-cache", "a", "b")
 
         assertThat(result.task(taskName)?.outcome == SUCCESS)
-        val lines = result.output
-            .lines()
-            .filter { it.isNotEmpty() }
-            .takeLast(2)
+        val lines =
+            result.output
+                .lines()
+                .filter { it.isNotEmpty() }
+                .takeLast(2)
         if (repetitionInfo.currentRepetition == 1) {
             assertThat(lines)
                 .containsExactly(
                     ":b | 2S | 67% | ${Printer.BLOCK_CHAR.toString().repeat(2)}",
-                    ":a | 1S | 33% | ${Printer.BLOCK_CHAR}"
+                    ":a | 1S | 33% | ${Printer.BLOCK_CHAR}",
                 )
         } else {
             // https://github.com/asarkar/build-time-tracker/discussions/45
             assertThat(lines)
                 .containsExactly(
                     ":b | 2S | 100% | ${Printer.BLOCK_CHAR.toString().repeat(2)}",
-                    ":a | 1S |  50% | ${Printer.BLOCK_CHAR}"
+                    ":a | 1S |  50% | ${Printer.BLOCK_CHAR}",
                 )
         }
     }
@@ -442,7 +419,7 @@ class BuildTimeTrackerPluginFunctionalTest {
                 ${Constants.PLUGIN_EXTENSION_NAME} {
                     minTaskDuration.set(Duration.ofMillis(100))
                 }
-                """
+                """,
         )
 
         val buildFileLib2 = newBuildFile(testProjectDir.resolve("lib2"), "build.gradle.kts")
@@ -458,7 +435,7 @@ class BuildTimeTrackerPluginFunctionalTest {
                 ${Constants.PLUGIN_EXTENSION_NAME} {
                     minTaskDuration.set(Duration.ofMillis(100))
                 }
-                """
+                """,
         )
 
         val settingsFile = testProjectDir.resolve("settings.gradle")
@@ -473,14 +450,15 @@ class BuildTimeTrackerPluginFunctionalTest {
         val result = run(settingsFile.parent, "--parallel", "a", "b")
 
         assertThat(result.task(taskName)?.outcome == SUCCESS)
-        val lines = result.output
-            .lines()
-            .filter { it.isNotEmpty() }
-            .takeLast(2)
+        val lines =
+            result.output
+                .lines()
+                .filter { it.isNotEmpty() }
+                .takeLast(2)
         assertThat(lines)
             .containsExactly(
                 ":lib1:a | 1S |  50% | ${Printer.BLOCK_CHAR}",
-                ":lib2:b | 2S | 100% | ${Printer.BLOCK_CHAR.toString().repeat(2)}"
+                ":lib2:b | 2S | 100% | ${Printer.BLOCK_CHAR.toString().repeat(2)}",
             )
     }
 }
