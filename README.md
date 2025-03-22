@@ -71,4 +71,4 @@ By participating, you are expected to uphold this code.
 
 ## License
 
-Copyright 2022 Abhijit Sarkar - Released under [Apache License v2.0](LICENSE).
+Copyright 2025 Abhijit Sarkar - Released under [Apache License v2.0](LICENSE).
