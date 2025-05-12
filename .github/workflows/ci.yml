@@ -1,9 +1,5 @@
-name: CI Pipeline
-on:
-  push:
-    branches:
-      - master
-  pull_request:
+name: CI
+on: [push, workflow_dispatch]
 
 jobs:
   Build:
@@ -17,12 +13,8 @@ jobs:
           distribution: "temurin"
           java-version-file: ".java-version"
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-
       - name: Build and test
-        run: ./gradlew clean build -x ktlintMainSourceSetCheck -x ktlintMainSourceSetFormat -x ktlintTestSourceSetCheck -x ktlintTestSourceSetFormat
-        continue-on-error: true
+        run: ./gradlew clean test
 
       - name: Publish unit test results
         uses: EnricoMi/publish-unit-test-result-action@v2
@@ -31,7 +23,7 @@ jobs:
           files: "build/test-results/**/*.xml"
 
       - name: Lint
-        run: ./gradlew ktlintFormat ktlintCheck
+        run: ./gradlew check
 
       - name: Generate coverage report
         run: ./gradlew jacocoTestReport

@@ -4,8 +4,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome.SUCCESS
-import org.junit.jupiter.api.RepeatedTest
-import org.junit.jupiter.api.RepetitionInfo
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Files
@@ -16,14 +14,11 @@ import java.nio.file.StandardOpenOption.CREATE
 import java.nio.file.StandardOpenOption.TRUNCATE_EXISTING
 import java.nio.file.StandardOpenOption.WRITE
 import java.time.Duration
-import java.util.Properties
-import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.absolutePathString
-import kotlin.io.path.inputStream
+import kotlin.io.path.div
 import kotlin.io.path.readLines
 import kotlin.io.path.readText
 
-@OptIn(ExperimentalPathApi::class)
 class BuildTimeTrackerPluginFunctionalTest {
     private val taskName = "hello"
 
@@ -34,83 +29,78 @@ class BuildTimeTrackerPluginFunctionalTest {
         @TempDir
         @JvmStatic
         lateinit var sharedTestProjectDir: Path
-    }
 
-    private val props =
-        generateSequence(Paths.get(javaClass.protectionDomain.codeSource.location.path)) {
-            val props = it.resolve("gradle.properties")
-            if (Files.exists(props)) props else it.parent
+        private val pluginId: String by lazy {
+            (Paths.get(System.getenv("PROJECT_DIR")) / "gradle.properties")
+                .readLines()
+                .first { it.contains("pluginId") }
+                .split("=")
+                .last()
+                .trim()
         }
-            .dropWhile { Files.isDirectory(it) }
-            .take(1)
-            .iterator()
-            .next()
-            .inputStream()
-            .use {
-                Properties().apply { load(it) }
+
+        private fun newBuildFile(
+            rootDir: Path,
+            name: String,
+        ): Path {
+            Files.createDirectories(rootDir)
+            val buildFile = rootDir / name
+            Files.newBufferedWriter(buildFile, CREATE, WRITE, TRUNCATE_EXISTING).use {
+                it.write(
+                    """
+                    import ${Thread::class.qualifiedName}
+                    import ${Output::class.qualifiedName}
+                    import ${Duration::class.qualifiedName}
+                    import ${Sort::class.qualifiedName}
+                    
+                    plugins {
+                        id("$pluginId")
+                    }
+                    """.trimIndent(),
+                )
+                it.newLine()
+            }
+            return buildFile
+        }
+
+        private fun printHorzLine(
+            file: Path,
+            start: Boolean,
+        ) {
+            val text = file.fileName.toString() + (if (start) " start" else " end")
+            val n = 80 - text.length
+            val k = n / 2
+            println(
+                buildString {
+                    append("-".repeat(k))
+                    append(text)
+                    append("-".repeat(n - k))
+                },
+            )
+        }
+
+        private fun Path.append(content: String) {
+            Files.newBufferedWriter(this, APPEND).use {
+                it.write(content.trimIndent())
             }
 
-    private fun newBuildFile(
-        rootDir: Path,
-        name: String,
-    ): Path {
-        Files.createDirectories(rootDir)
-        val buildFile = rootDir.resolve(name)
-        Files.newBufferedWriter(buildFile, CREATE, WRITE, TRUNCATE_EXISTING).use {
-            it.write(
-                """
-                import ${Thread::class.qualifiedName}
-                import ${Output::class.qualifiedName}
-                import ${Duration::class.qualifiedName}
-                import ${Sort::class.qualifiedName}
-                
-                plugins {
-                    id("${props.getProperty("pluginId")}")
-                }
-                """.trimIndent(),
-            )
-            it.newLine()
-        }
-        return buildFile
-    }
-
-    private fun printHorzLine(
-        file: Path,
-        start: Boolean,
-    ) {
-        val text = file.fileName.toString() + (if (start) " start" else " end")
-        val n = 80 - text.length
-        val k = n / 2
-        println(
-            buildString {
-                append("-".repeat(k))
-                append(text)
-                append("-".repeat(n - k))
-            },
-        )
-    }
-
-    private fun Path.append(content: String) {
-        Files.newBufferedWriter(this, APPEND).use {
-            it.write(content.trimIndent())
+            printHorzLine(this, true)
+            println(this.readText())
+            printHorzLine(this, false)
         }
 
-        printHorzLine(this, true)
-        println(this.readText())
-        printHorzLine(this, false)
-    }
-
-    private fun run(
-        rootDir: Path,
-        vararg args: String,
-    ): BuildResult {
-        return GradleRunner.create()
-            .withProjectDir(rootDir.toFile())
-            .withArguments(*args, "-q", "--warning-mode=all", "--stacktrace")
-            .withPluginClasspath()
-            .withDebug(false)
-            .forwardOutput()
-            .build()
+        private fun run(
+            rootDir: Path,
+            vararg args: String,
+        ): BuildResult {
+            return GradleRunner.create()
+                .withProjectDir(rootDir.toFile())
+                .withArguments(*args, "-q", "--warning-mode=all", "--stacktrace")
+                .withPluginClasspath()
+                .withDebug(false)
+                .forwardOutput()
+                .build()
+        }
     }
 
     @Test
@@ -190,7 +180,7 @@ class BuildTimeTrackerPluginFunctionalTest {
         )
 
         val result = run(buildFile.parent, taskName)
-        val csvFile = testProjectDir.resolve(Constants.CSV_FILENAME)
+        val csvFile = testProjectDir / Constants.CSV_FILENAME
         assertThat(result.task(taskName)?.outcome == SUCCESS)
         assertThat(Files.exists(csvFile)).isTrue
         val lines = csvFile.readLines()
@@ -219,7 +209,7 @@ class BuildTimeTrackerPluginFunctionalTest {
         )
 
         val result = run(buildFile.parent, taskName)
-        val csvFile = testProjectDir.resolve(Constants.CSV_FILENAME)
+        val csvFile = testProjectDir / Constants.CSV_FILENAME
         assertThat(result.task(taskName)?.outcome == SUCCESS)
         assertThat(Files.exists(csvFile)).isTrue
         val lines = csvFile.readLines()
@@ -307,8 +297,8 @@ class BuildTimeTrackerPluginFunctionalTest {
             )
     }
 
-    @RepeatedTest(3)
-    fun testConfigurationCache(repetitionInfo: RepetitionInfo) {
+    @Test
+    fun testConfigurationCache() {
         val buildFile = newBuildFile(sharedTestProjectDir, "build.gradle.kts")
         buildFile.append(
             """
@@ -339,24 +329,16 @@ class BuildTimeTrackerPluginFunctionalTest {
                 .lines()
                 .filter { it.isNotEmpty() }
                 .takeLast(2)
-        if (repetitionInfo.currentRepetition == 1) {
-            assertThat(lines)
-                .containsExactly(
-                    ":a | 1S | 33% | ${Printer.BLOCK_CHAR}",
-                    ":b | 2S | 67% | ${Printer.BLOCK_CHAR.toString().repeat(2)}",
-                )
-        } else {
-            // https://github.com/asarkar/build-time-tracker/discussions/45
-            assertThat(lines)
-                .containsExactly(
-                    ":a | 1S |  50% | ${Printer.BLOCK_CHAR}",
-                    ":b | 2S | 100% | ${Printer.BLOCK_CHAR.toString().repeat(2)}",
-                )
-        }
+        // https://github.com/asarkar/build-time-tracker/discussions/45
+        assertThat(lines)
+            .containsExactly(
+                ":a | 1S |  50% | ${Printer.BLOCK_CHAR}",
+                ":b | 2S | 100% | ${Printer.BLOCK_CHAR.toString().repeat(2)}",
+            )
     }
 
-    @RepeatedTest(3)
-    fun testSortDescAndConfigurationCache(repetitionInfo: RepetitionInfo) {
+    @Test
+    fun testSortDescAndConfigurationCache() {
         val buildFile = newBuildFile(sharedTestProjectDir, "build.gradle.kts")
         buildFile.append(
             """
@@ -388,25 +370,17 @@ class BuildTimeTrackerPluginFunctionalTest {
                 .lines()
                 .filter { it.isNotEmpty() }
                 .takeLast(2)
-        if (repetitionInfo.currentRepetition == 1) {
-            assertThat(lines)
-                .containsExactly(
-                    ":b | 2S | 67% | ${Printer.BLOCK_CHAR.toString().repeat(2)}",
-                    ":a | 1S | 33% | ${Printer.BLOCK_CHAR}",
-                )
-        } else {
-            // https://github.com/asarkar/build-time-tracker/discussions/45
-            assertThat(lines)
-                .containsExactly(
-                    ":b | 2S | 100% | ${Printer.BLOCK_CHAR.toString().repeat(2)}",
-                    ":a | 1S |  50% | ${Printer.BLOCK_CHAR}",
-                )
-        }
+        // https://github.com/asarkar/build-time-tracker/discussions/45
+        assertThat(lines)
+            .containsExactly(
+                ":b | 2S | 100% | ${Printer.BLOCK_CHAR.toString().repeat(2)}",
+                ":a | 1S |  50% | ${Printer.BLOCK_CHAR}",
+            )
     }
 
     @Test
     fun testParallelBuild() {
-        val buildFileLib1 = newBuildFile(testProjectDir.resolve("lib1"), "build.gradle.kts")
+        val buildFileLib1 = newBuildFile(testProjectDir / "lib1", "build.gradle.kts")
         buildFileLib1.append(
             """
                 tasks.register("a") {
@@ -422,7 +396,7 @@ class BuildTimeTrackerPluginFunctionalTest {
                 """,
         )
 
-        val buildFileLib2 = newBuildFile(testProjectDir.resolve("lib2"), "build.gradle.kts")
+        val buildFileLib2 = newBuildFile(testProjectDir / "lib2", "build.gradle.kts")
         buildFileLib2.append(
             """
                 tasks.register("b") {
@@ -438,9 +412,14 @@ class BuildTimeTrackerPluginFunctionalTest {
                 """,
         )
 
-        val settingsFile = testProjectDir.resolve("settings.gradle")
+        val settingsFile = testProjectDir / "settings.gradle"
         Files.newBufferedWriter(settingsFile, CREATE, WRITE, TRUNCATE_EXISTING).use {
-            it.write("""include ":lib1", ":lib2"""")
+            it.write(
+                """
+                include ":lib1", ":lib2"
+                enableFeaturePreview("STABLE_CONFIGURATION_CACHE")
+                """.trimIndent(),
+            )
         }
 
         printHorzLine(settingsFile, true)

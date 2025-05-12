@@ -1,92 +1,100 @@
+import org.gradle.kotlin.dsl.withType
+import org.jlleitschuh.gradle.ktlint.tasks.KtLintCheckTask
+import org.jlleitschuh.gradle.ktlint.tasks.KtLintFormatTask
+
 plugins {
-    `java-gradle-plugin`
-    kotlin("jvm")
-    id("org.jlleitschuh.gradle.ktlint")
-    id("com.gradle.plugin-publish")
+    `kotlin-dsl`
+    alias(libs.plugins.ktlint)
+    alias(libs.plugins.pluginPublish)
     jacoco
 }
 
-val pluginWebsite: String by project
-val pluginVcsUrl: String by project
-val pluginTags: String by project
-val pluginId: String by project
-val pluginDisplayName: String by project
-val pluginDescription: String by project
-val pluginImplementationClass: String by project
-val pluginDeclarationName: String by project
+val javaVersion =
+    providers
+        .fileContents(layout.projectDirectory.file(".java-version"))
+        .asText
+        .map { v -> JavaLanguageVersion.of(v.trim()) }
 
-gradlePlugin {
-    website.set(pluginWebsite)
-    vcsUrl.set(pluginVcsUrl)
-    plugins {
-        create(pluginDeclarationName) {
-            id = pluginId
-            displayName = pluginDisplayName
-            description = pluginDescription
-            implementationClass = pluginImplementationClass
-            tags.set(pluginTags.split(',').map(String::trim))
-        }
+kotlin {
+    jvmToolchain {
+        languageVersion = javaVersion
+    }
+    compilerOptions {
+        freeCompilerArgs = listOf("-Werror", "-opt-in=kotlin.RequiresOptIn")
     }
 }
 
 val projectGroup: String by project
 val projectVersion: String by project
+
 group = projectGroup
 version = projectVersion
+
+val pluginWebsite =
+    providers.environmentVariable("GITHUB_SERVER_URL")
+        .zip(providers.environmentVariable("GITHUB_REPOSITORY"), { x, y -> "$x/$y" })
+
+val pluginTags: String by project
+val pluginId: String by project
+val pluginDescription: String by project
+val pluginImplementationClass: String by project
+val pluginDeclarationName: String by project
+
+gradlePlugin {
+    website = pluginWebsite
+    vcsUrl = pluginWebsite.map { "$it.git" }
+    plugins {
+        register(pluginDeclarationName) {
+            id = pluginId
+            displayName = rootProject.name
+            description = pluginDescription
+            implementationClass = pluginImplementationClass
+            tags = pluginTags.split(',').map(String::trim)
+        }
+    }
+}
 
 repositories {
     mavenCentral()
 }
 
-val junitVersion: String by project
-val assertjVersion: String by project
 dependencies {
-    implementation(kotlin("stdlib-jdk8"))
-    testImplementation(platform("org.junit:junit-bom:$junitVersion"))
-    testImplementation("org.junit.jupiter:junit-jupiter-api")
-    testImplementation("org.junit.jupiter:junit-jupiter-params")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib")
+    testImplementation(platform(libs.junit.bom))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation(libs.assertj)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    testImplementation("org.assertj:assertj-core:$assertjVersion")
 }
 
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-    kotlinOptions {
-        freeCompilerArgs = listOf("-Xjsr305=strict", "-opt-in=kotlin.RequiresOptIn")
-        jvmTarget = "17"
+val ci: Boolean by lazy { System.getenv("CI") != null }
+
+tasks {
+    wrapper {
+        distributionType = Wrapper.DistributionType.BIN
     }
-}
-
-plugins.withType<JavaPlugin>().configureEach {
-    extensions.configure<JavaPluginExtension> {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+    test {
+        useJUnitPlatform()
+        testLogging {
+            showStandardStreams = true
+        }
+        environment("PROJECT_DIR", rootDir.path)
     }
-}
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-    testLogging {
-        showStandardStreams = true
-    }
-}
-
-publishing {
-    publications {
-        repositories {
-            mavenLocal()
+    jacocoTestReport {
+        reports {
+            xml.required = true
+            csv.required = false
+            html.required = false
         }
     }
-}
 
-tasks.wrapper {
-    distributionType = Wrapper.DistributionType.BIN
-}
+    withType<KtLintFormatTask> {
+        enabled = !ci
+    }
 
-tasks.jacocoTestReport {
-    reports {
-        xml.required.set(true)
-        csv.required.set(false)
-        html.required.set(false)
+    // https://github.com/JLLeitschuh/ktlint-gradle/issues/886
+    withType<KtLintCheckTask> {
+        val fmtTaskName = name.replace("Check", "Format")
+        val fmtTask by named(fmtTaskName)
+        dependsOn(fmtTask)
     }
 }
