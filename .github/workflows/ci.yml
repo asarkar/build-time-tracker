@@ -31,7 +31,7 @@ jobs:
           files: "build/test-results/**/*.xml"
 
       - name: Lint
-        run: ./gradlew check
+        run: ./gradlew check -x test
 
       - name: Generate coverage report
         run: ./gradlew jacocoTestReport

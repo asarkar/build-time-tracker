@@ -5,6 +5,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome.SUCCESS
+import org.junit.jupiter.api.RepeatedTest
+import org.junit.jupiter.api.RepetitionInfo
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Files
@@ -305,8 +307,8 @@ class BuildTimeTrackerPluginFunctionalTest {
             )
     }
 
-    @Test
-    fun testConfigurationCache() {
+    @RepeatedTest(2)
+    fun testConfigurationCache(repInfo: RepetitionInfo) {
         val buildFile = newBuildFile(sharedTestProjectDir, "build.gradle.kts")
         buildFile.append(
             """
@@ -339,7 +341,11 @@ class BuildTimeTrackerPluginFunctionalTest {
                 .takeLast(2)
 
         val gradleV8 = ComparableVersion("8.0")
-        if (gradleVersion != null && ComparableVersion(gradleVersion) < gradleV8) {
+        if (
+            repInfo.currentRepetition == 1 &&
+            gradleVersion != null &&
+            ComparableVersion(gradleVersion) < gradleV8
+        ) {
             assertThat(lines)
                 .containsExactly(
                     ":a | 1S | 33% | ${Printer.BLOCK_CHAR}",
@@ -355,8 +361,8 @@ class BuildTimeTrackerPluginFunctionalTest {
         }
     }
 
-    @Test
-    fun testSortDescAndConfigurationCache() {
+    @RepeatedTest(2)
+    fun testSortDescAndConfigurationCache(repInfo: RepetitionInfo) {
         val buildFile = newBuildFile(sharedTestProjectDir, "build.gradle.kts")
         buildFile.append(
             """
@@ -390,7 +396,11 @@ class BuildTimeTrackerPluginFunctionalTest {
                 .takeLast(2)
 
         val gradleV8 = ComparableVersion("8.0")
-        if (gradleVersion != null && ComparableVersion(gradleVersion) < gradleV8) {
+        if (
+            repInfo.currentRepetition == 1 &&
+            gradleVersion != null &&
+            ComparableVersion(gradleVersion) < gradleV8
+        ) {
             assertThat(lines)
                 .containsExactly(
                     ":b | 2S | 67% | ${Printer.BLOCK_CHAR.toString().repeat(2)}",
