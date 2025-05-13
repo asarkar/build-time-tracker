@@ -7,7 +7,6 @@ import org.gradle.api.plugins.ReportingBasePlugin
 import org.gradle.build.event.BuildEventsListenerRegistry
 import javax.inject.Inject
 
-@Suppress("UnstableApiUsage")
 class BuildTimeTrackerPlugin
     @Inject
     constructor(private val registry: BuildEventsListenerRegistry) : Plugin<Project> {
@@ -22,8 +21,8 @@ class BuildTimeTrackerPlugin
             project.gradle.taskGraph.whenReady {
                 val clazz = TimingRecorder::class.java
                 val timingRecorder =
-                    project.gradle.sharedServices.registerIfAbsent(clazz.simpleName, clazz) { spec ->
-                        with(spec.parameters) {
+                    project.gradle.sharedServices.registerIfAbsent(clazz.simpleName, clazz) {
+                        with(parameters) {
                             barPosition.set(ext.barPosition)
                             sortBy.set(ext.sortBy)
                             output.set(ext.output)
