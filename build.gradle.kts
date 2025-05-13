@@ -61,6 +61,7 @@ dependencies {
     testImplementation(platform(libs.junit.bom))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation(libs.assertj)
+    testImplementation(libs.mavenArtifact)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

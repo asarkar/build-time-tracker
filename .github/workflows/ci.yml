@@ -4,6 +4,12 @@ on: [push, workflow_dispatch]
 jobs:
   Build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        gradle-version:
+          - "7.6.4"
+          - "8.0"
+          - "8.14"
     steps:
       - uses: actions/checkout@v4
 
@@ -14,6 +20,8 @@ jobs:
           java-version-file: ".java-version"
 
       - name: Build and test
+        env:
+          GRADLE_VERSION: ${{ matrix.gradle-version }}
         run: ./gradlew clean test
 
       - name: Publish unit test results

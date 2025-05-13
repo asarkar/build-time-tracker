@@ -1,5 +1,6 @@
 package com.asarkar.gradle.buildtimetracker
 
+import org.apache.maven.artifact.versioning.ComparableVersion
 import org.assertj.core.api.Assertions.assertThat
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
@@ -38,6 +39,8 @@ class BuildTimeTrackerPluginFunctionalTest {
                 .last()
                 .trim()
         }
+
+        private val gradleVersion: String? = System.getenv("GRADLE_VERSION")?.trim()
 
         private fun newBuildFile(
             rootDir: Path,
@@ -93,12 +96,17 @@ class BuildTimeTrackerPluginFunctionalTest {
             rootDir: Path,
             vararg args: String,
         ): BuildResult {
-            return GradleRunner.create()
-                .withProjectDir(rootDir.toFile())
-                .withArguments(*args, "-q", "--warning-mode=fail", "--stacktrace")
-                .withPluginClasspath()
-                .withDebug(false)
-                .forwardOutput()
+            val runner =
+                GradleRunner.create()
+                    .withProjectDir(rootDir.toFile())
+                    .withArguments(*args, "-q", "--warning-mode=fail", "--stacktrace")
+                    .withPluginClasspath()
+                    .withDebug(false)
+                    .forwardOutput()
+            if (gradleVersion != null) {
+                runner.withGradleVersion(gradleVersion)
+            }
+            return runner
                 .build()
         }
     }
@@ -329,12 +337,22 @@ class BuildTimeTrackerPluginFunctionalTest {
                 .lines()
                 .filter { it.isNotEmpty() }
                 .takeLast(2)
-        // https://github.com/asarkar/build-time-tracker/discussions/45
-        assertThat(lines)
-            .containsExactly(
-                ":a | 1S |  50% | ${Printer.BLOCK_CHAR}",
-                ":b | 2S | 100% | ${Printer.BLOCK_CHAR.toString().repeat(2)}",
-            )
+
+        val gradleV8 = ComparableVersion("8.0")
+        if (gradleVersion != null && ComparableVersion(gradleVersion) < gradleV8) {
+            assertThat(lines)
+                .containsExactly(
+                    ":a | 1S | 33% | ${Printer.BLOCK_CHAR}",
+                    ":b | 2S | 67% | ${Printer.BLOCK_CHAR.toString().repeat(2)}",
+                )
+        } else {
+            // https://github.com/asarkar/build-time-tracker/discussions/45
+            assertThat(lines)
+                .containsExactly(
+                    ":a | 1S |  50% | ${Printer.BLOCK_CHAR}",
+                    ":b | 2S | 100% | ${Printer.BLOCK_CHAR.toString().repeat(2)}",
+                )
+        }
     }
 
     @Test
@@ -370,12 +388,22 @@ class BuildTimeTrackerPluginFunctionalTest {
                 .lines()
                 .filter { it.isNotEmpty() }
                 .takeLast(2)
-        // https://github.com/asarkar/build-time-tracker/discussions/45
-        assertThat(lines)
-            .containsExactly(
-                ":b | 2S | 100% | ${Printer.BLOCK_CHAR.toString().repeat(2)}",
-                ":a | 1S |  50% | ${Printer.BLOCK_CHAR}",
-            )
+
+        val gradleV8 = ComparableVersion("8.0")
+        if (gradleVersion != null && ComparableVersion(gradleVersion) < gradleV8) {
+            assertThat(lines)
+                .containsExactly(
+                    ":b | 2S | 67% | ${Printer.BLOCK_CHAR.toString().repeat(2)}",
+                    ":a | 1S | 33% | ${Printer.BLOCK_CHAR}",
+                )
+        } else {
+            // https://github.com/asarkar/build-time-tracker/discussions/45
+            assertThat(lines)
+                .containsExactly(
+                    ":b | 2S | 100% | ${Printer.BLOCK_CHAR.toString().repeat(2)}",
+                    ":a | 1S |  50% | ${Printer.BLOCK_CHAR}",
+                )
+        }
     }
 
     @Test

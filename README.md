@@ -55,3 +55,7 @@ running Windows, make sure the terminal encoding is set to UTF-8, or turn off th
 Microsoft Excel. How to do this depends on the Operating System, and Excel version, but
 [here](https://answers.microsoft.com/en-us/msoffice/forum/msoffice_excel-mso_mac-mso_365hp/how-to-open-utf-8-csv-file-in-excel-without-mis/1eb15700-d235-441e-8b99-db10fafff3c2)
 is one way.
+
+## Compatibility Chart
+- Java 17
+- Gradle: v7.6.4 - v8.14. Versions outside this range have not been tested with.
