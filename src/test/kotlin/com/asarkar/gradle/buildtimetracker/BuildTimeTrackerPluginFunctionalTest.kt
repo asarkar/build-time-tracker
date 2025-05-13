@@ -95,7 +95,7 @@ class BuildTimeTrackerPluginFunctionalTest {
         ): BuildResult {
             return GradleRunner.create()
                 .withProjectDir(rootDir.toFile())
-                .withArguments(*args, "-q", "--warning-mode=all", "--stacktrace")
+                .withArguments(*args, "-q", "--warning-mode=fail", "--stacktrace")
                 .withPluginClasspath()
                 .withDebug(false)
                 .forwardOutput()

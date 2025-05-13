@@ -7,7 +7,7 @@ Gradle plugin that prints the time taken by the tasks in a build.
 [![Gradle](https://img.shields.io/maven-metadata/v/https/plugins.gradle.org/m2/com/asarkar/gradle/build-time-tracker/com.asarkar.gradle.build-time-tracker.gradle.plugin/maven-metadata.xml.svg?style=for-the-badge&label=gradle)](https://plugins.gradle.org/plugin/com.asarkar.gradle.build-time-tracker)
 [![License](https://img.shields.io/github/license/asarkar/build-time-tracker?style=for-the-badge&logo=apache&color=brightgreen)](https://www.apache.org/licenses/LICENSE-2.0)
 [![COC](https://img.shields.io/badge/COC-Code%20Of%20Conduct-blue?style=for-the-badge&logo=asterisk&logoColor=white)](https://github.com/asarkar/.github/blob/main/CODE_OF_CONDUCT.md)
-[![JVM](https://img.shields.io/badge/dynamic/regex?style=for-the-badge&logo=openjdk&color=brightgreen&label=JVM&url=https%3A%2F%2Fraw.githubusercontent.com%2Fasarkar%2Fbuild-time-tracker%2Frefs%2Fheads%2Fmain%2F.java-version&search=%5Cd%2B)](https://github.com/asarkar/build-time-tracker/blob/main/README.md)
+[![JVM](https://img.shields.io/badge/dynamic/regex?style=for-the-badge&logo=openjdk&color=brightgreen&label=JVM&url=https%3A%2F%2Fraw.githubusercontent.com%2Fasarkar%2Fbuild-time-tracker%2Frefs%2Fheads%2Fmain%2F.java-version&search=%5Cd%2B)](https://github.com/asarkar/build-time-tracker/blob/main/.java-version)
 
 ```
 == Build time summary ==

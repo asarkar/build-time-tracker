@@ -1,4 +1,3 @@
-import org.gradle.kotlin.dsl.withType
 import org.jlleitschuh.gradle.ktlint.tasks.KtLintCheckTask
 import org.jlleitschuh.gradle.ktlint.tasks.KtLintFormatTask
 
@@ -20,7 +19,7 @@ kotlin {
         languageVersion = javaVersion
     }
     compilerOptions {
-        freeCompilerArgs = listOf("-Werror", "-opt-in=kotlin.RequiresOptIn")
+        freeCompilerArgs = listOf("-Werror")
     }
 }
 
