@@ -65,7 +65,7 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
-val ci: Boolean by lazy { System.getenv("CI") != null }
+val ci = providers.environmentVariable("CI")
 
 tasks {
     wrapper {
@@ -87,7 +87,7 @@ tasks {
     }
 
     withType<KtLintFormatTask> {
-        enabled = !ci
+        enabled = !ci.isPresent
     }
 
     // https://github.com/JLLeitschuh/ktlint-gradle/issues/886
