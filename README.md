@@ -37,7 +37,8 @@ buildTimeTracker {
 }
 ```
 
-> If you are using Kotlin build script, set the configuration properties using `property.set()` method.
+> If you are using Kotlin build script, set the configuration properties using `property.set()` method. 
+Gradle 8.2 onwards, it is also possible to use the `=` operator to assign values to `Property` types.
 
 > `BarPosition`, `Sort`, and `Output` are enums, so, they need to be imported or fully-qualified with `com.asarkar.gradle.buildtimetracker`.
 
