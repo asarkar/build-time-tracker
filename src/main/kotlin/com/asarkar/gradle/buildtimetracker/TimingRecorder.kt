@@ -13,7 +13,10 @@ import java.time.temporal.ChronoUnit
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicReference
 
-abstract class TimingRecorder : BuildService<TimingRecorder.Params>, OperationCompletionListener, AutoCloseable {
+abstract class TimingRecorder :
+    BuildService<TimingRecorder.Params>,
+    OperationCompletionListener,
+    AutoCloseable {
     interface Params : BuildServiceParameters {
         val barPosition: Property<BarPosition>
         val sortBy: Property<Sort>
@@ -31,9 +34,10 @@ abstract class TimingRecorder : BuildService<TimingRecorder.Params>, OperationCo
         if (event is TaskFinishEvent) {
             val eventStart = Instant.ofEpochMilli(event.result.startTime)
             buildStart.accumulateAndGet(eventStart, ::minOf)
-            val duration = Duration.ofMillis(event.result.endTime - event.result.startTime).seconds
-            if (duration >= parameters.minTaskDuration.get().seconds) {
-                taskDurations.add(event.descriptor.taskPath to duration)
+            val durationMillis = event.result.endTime - event.result.startTime
+            if (durationMillis >= parameters.minTaskDuration.get().toMillis()) {
+                val durationSeconds = Duration.ofMillis(durationMillis).seconds
+                taskDurations.add(event.descriptor.taskPath to durationSeconds)
             }
         }
     }
@@ -44,7 +48,8 @@ abstract class TimingRecorder : BuildService<TimingRecorder.Params>, OperationCo
         }
 
         val buildDuration = Duration.between(buildStart.get(), Instant.now()).seconds
-        Printer.newInstance(parameters.output.get(), parameters.reportsDir.get().asFile)
+        Printer
+            .newInstance(parameters.output.get(), parameters.reportsDir.get().asFile)
             .use { printer ->
                 val sortBy: Sort = parameters.sortBy.get()
                 val durations =

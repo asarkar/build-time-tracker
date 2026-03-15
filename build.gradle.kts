@@ -1,3 +1,4 @@
+import org.gradle.plugin.compatibility.compatibility
 import org.jlleitschuh.gradle.ktlint.tasks.KtLintCheckTask
 import org.jlleitschuh.gradle.ktlint.tasks.KtLintFormatTask
 
@@ -30,7 +31,8 @@ group = projectGroup
 version = projectVersion
 
 val pluginWebsite =
-    providers.environmentVariable("GITHUB_SERVER_URL")
+    providers
+        .environmentVariable("GITHUB_SERVER_URL")
         .zip(providers.environmentVariable("GITHUB_REPOSITORY"), { x, y -> "$x/$y" })
 
 val pluginTags: String by project
@@ -49,6 +51,12 @@ gradlePlugin {
             description = pluginDescription
             implementationClass = pluginImplementationClass
             tags = pluginTags.split(',').map(String::trim)
+            // https://github.com/gradle/gradle-plugin-compatibility-plugin
+            compatibility {
+                features {
+                    configurationCache = true
+                }
+            }
         }
     }
 }
