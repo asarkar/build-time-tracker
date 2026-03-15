@@ -34,7 +34,8 @@ interface Printer : Closeable {
         val scalingFraction = minOf(input.maxWidth.toLong(), maxDuration) / maxDuration.toDouble()
         val maxNumBlocks = round(maxDuration * scalingFraction).toInt()
         val maxFormattedPercentLen =
-            maxDuration.percentOf(input.buildDuration)
+            maxDuration
+                .percentOf(input.buildDuration)
                 .format()
                 .length
 
@@ -52,18 +53,21 @@ interface Printer : Closeable {
                     percent.format(),
                 )
 
-            if (!input.showBars) {
-                out.println(common)
-            } else if (input.barPosition == BarPosition.TRAILING) {
-                out.printf("%s%s%s\n", common, delimiter, "$BLOCK_CHAR".repeat(numBlocks))
-            } else {
-                out.printf("%${maxNumBlocks}s%s%s\n", "$BLOCK_CHAR".repeat(numBlocks), delimiter, common)
-            }
+            val line =
+                if (!input.showBars) {
+                    common
+                } else if (input.barPosition == BarPosition.TRAILING) {
+                    "$common$delimiter${"$BLOCK_CHAR".repeat(numBlocks)}"
+                } else {
+                    String.format("%${maxNumBlocks}s%s%s", "$BLOCK_CHAR".repeat(numBlocks), delimiter, common)
+                }
+            emit(line)
         }
     }
 
-    val out: PrintStream
     val delimiter: String
+
+    fun emit(line: String)
 
     companion object {
         const val BLOCK_CHAR = '\u2588'
@@ -72,7 +76,9 @@ interface Printer : Closeable {
 
         internal fun Long.format(): String {
             val separators = setOf('P', 'D', 'T')
-            return Duration.ofSeconds(this).toString()
+            return Duration
+                .ofSeconds(this)
+                .toString()
                 .filterNot { it in separators }
         }
 
@@ -81,8 +87,8 @@ interface Printer : Closeable {
         fun newInstance(
             output: Output,
             reportsDir: File,
-        ): Printer {
-            return when (output) {
+        ): Printer =
+            when (output) {
                 Output.CONSOLE -> ConsolePrinter()
                 Output.CSV -> {
                     val csvFile =
@@ -91,7 +97,6 @@ interface Printer : Closeable {
                     CsvPrinter(newOutputStream(csvFile))
                 }
             }
-        }
 
         internal fun newOutputStream(csvFile: File): PrintStream {
             csvFile.parentFile.mkdirs()

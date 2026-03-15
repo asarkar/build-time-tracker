@@ -47,7 +47,7 @@ of how long individual tasks took to complete relative to the build, but are not
 milliseconds. [Read this](https://github.com/asarkar/build-time-tracker/discussions/45) for details.
 
 :information_source: It is sufficient to apply the plugin to the root project; also applying to subprojects will result in
-duplication of the report.
+duplication of the report. From v5.0.2 onward, a warning is emitted if this is detected.
 
 :warning: If the output terminal does not support UTF-8 encoding, the bars may appear as weird characters. If you are
 running Windows, make sure the terminal encoding is set to UTF-8, or turn off the bars as explained above.
@@ -60,3 +60,18 @@ is one way.
 ## Compatibility Chart
 - Java 17
 - Gradle: v7.6.4 - v8.14. Versions outside this range have not been tested with.
+
+## Development
+
+**Option 1**: Install Java with `mise`, then run Gradle directly.
+
+```sh
+mise install
+./gradlew clean build
+```
+
+**Option 2**: Run Gradle through `mise`.
+
+```sh
+mise exec -- ./gradlew clean build
+```

@@ -18,12 +18,15 @@ import java.nio.file.Path
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.readLines
 
-private class PrinterWrapper(val output: Output) {
+private class PrinterWrapper(
+    val output: Output,
+) {
     private val out = ByteArrayOutputStream()
+    private val printStream = PrintStream(out)
     val delegate =
         when (output) {
-            Output.CONSOLE -> ConsolePrinter(PrintStream(out))
-            Output.CSV -> CsvPrinter(PrintStream(out))
+            Output.CONSOLE -> ConsolePrinter({ line -> printStream.println(line) })
+            Output.CSV -> CsvPrinter(printStream)
         }
 
     fun lines(): List<String> {
@@ -41,14 +44,20 @@ private class PrinterWrapper(val output: Output) {
     }
 }
 
-private data class Line(val task: String, val duration: String, val percent: String, val bar: String)
+private data class Line(
+    val task: String,
+    val duration: String,
+    val percent: String,
+    val bar: String,
+)
 
 private fun String.toLine(
     barPosition: BarPosition,
     delimiter: String,
 ): Line {
     val tokens =
-        this.split(delimiter)
+        this
+            .split(delimiter)
             .map { it.trim() }
             .takeIf { it.size == 4 } ?: fail("Unexpected line format: $this")
     return if (barPosition == BarPosition.TRAILING) {
@@ -143,7 +152,8 @@ class PrinterTest {
         val input = defaultInput.copy(maxWidth = 5)
         printerWrapper.delegate.print(input)
 
-        printerWrapper.lines()
+        printerWrapper
+            .lines()
             .forEach {
                 val line = it.toLine(input.barPosition, printerWrapper.delegate.delimiter)
                 assertThat(line.bar.length <= input.maxWidth)
@@ -158,7 +168,8 @@ class PrinterTest {
         val input = defaultInput.copy(showBars = false)
         printerWrapper.delegate.print(input)
 
-        printerWrapper.lines()
+        printerWrapper
+            .lines()
             .forEach {
                 assertThat(it).doesNotContain("$BLOCK_CHAR")
             }
@@ -190,11 +201,13 @@ class PrinterTest {
                 .trim()
                 .toRegex(RegexOption.LITERAL)
         val firstDelimiterRanges =
-            pattern.findAll(lines.first())
+            pattern
+                .findAll(lines.first())
                 .map { it.range.first to it.range.last }
                 .toList()
         val secondDelimiterRanges =
-            pattern.findAll(lines.last())
+            pattern
+                .findAll(lines.last())
                 .map { it.range.first to it.range.last }
                 .toList()
         assertThat(firstDelimiterRanges).containsExactlyElementsOf(secondDelimiterRanges)
@@ -222,11 +235,13 @@ class PrinterTest {
                 .trim()
                 .toRegex(RegexOption.LITERAL)
         val firstDelimiterRanges =
-            pattern.findAll(lines.first())
+            pattern
+                .findAll(lines.first())
                 .map { it.range.first to it.range.last }
                 .toList()
         val secondDelimiterRanges =
-            pattern.findAll(lines.last())
+            pattern
+                .findAll(lines.last())
                 .map { it.range.first to it.range.last }
                 .toList()
         assertThat(firstDelimiterRanges).containsExactlyElementsOf(secondDelimiterRanges)
@@ -292,19 +307,20 @@ class PrinterTest {
 
     companion object {
         @JvmStatic
-        fun argsProvider(): List<Arguments> {
-            return Output.values()
+        fun argsProvider(): List<Arguments> =
+            Output
+                .values()
                 .flatMap { out ->
-                    BarPosition.values()
+                    BarPosition
+                        .values()
                         .map { pos ->
                             Arguments.arguments(out, pos)
                         }
                 }
-        }
 
         @JvmStatic
-        fun durationProvider(): List<Arguments> {
-            return listOf(
+        fun durationProvider(): List<Arguments> =
+            listOf(
                 Arguments.arguments(14, "14S"),
                 Arguments.arguments(7200, "2H"),
                 Arguments.arguments(120, "2M"),
@@ -314,6 +330,5 @@ class PrinterTest {
                 Arguments.arguments(172800, "48H"),
                 Arguments.arguments(172859, "48H59S"),
             )
-        }
     }
 }

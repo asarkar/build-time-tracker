@@ -1,38 +1,29 @@
 name: Publish
 on:
   workflow_dispatch:
-    inputs:
-      ci:
-        description: "CI pipeline name"
-        required: false
-        default: "ci.yml"
 
 jobs:
   Publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Inject slug/short variables
-        uses: rlespinasse/github-slug-action@v5
-
-      - name: Check CI status
-        id: check
+      - name: Abort if latest CI on main did not succeed
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          output=$(curl -sSL -X GET -G -H "Accept: application/vnd.github.v3+json" -d "branch=${{ env.GITHUB_REF_NAME_SLUG }}" -d "event=push" https://api.github.com/repos/${{ github.repository }}/actions/workflows/${{ github.event.inputs.ci }}/runs | jq -r '.workflow_runs[0] | "\(.conclusion)"')
-          echo "status=$output" >> $GITHUB_OUTPUT
+          conclusion=$(gh run list \
+            --repo "${{ github.repository }}" \
+            --workflow=ci.yml \
+            --branch=main \
+            --limit=1 \
+            --json conclusion \
+            --jq '.[0].conclusion')
+          echo "Latest CI conclusion: $conclusion"
+          [ "$conclusion" = "success" ] || exit 1
 
-      - name: Abort if CI not successful
-        if: steps.check.outputs.status != 'success'
-        run: |
-          echo ${{ steps.check.outputs.status }}
-          exit 1
+      - uses: actions/checkout@v6
 
-      - name: Set up JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: "temurin"
-          java-version-file: ".java-version"
+      - name: Install mise
+        uses: jdx/mise-action@v4
 
       - name: Publish to Gradle Plugin Portal
         run: |

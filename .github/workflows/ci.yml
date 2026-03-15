@@ -11,13 +11,10 @@ jobs:
           - "8.0"
           - "8.14"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - name: Set up JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: "temurin"
-          java-version-file: ".java-version"
+      - name: Install mise
+        uses: jdx/mise-action@v4
 
       - name: Build and test
         env:

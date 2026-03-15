@@ -99,7 +99,8 @@ class BuildTimeTrackerPluginFunctionalTest {
             vararg args: String,
         ): BuildResult {
             val runner =
-                GradleRunner.create()
+                GradleRunner
+                    .create()
                     .withProjectDir(rootDir.toFile())
                     .withArguments(*args, "-q", "--warning-mode=fail", "--stacktrace")
                     .withPluginClasspath()
